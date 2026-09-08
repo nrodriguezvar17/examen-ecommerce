@@ -1,0 +1,29 @@
+.loader {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 1000;
+  background: color-mix(in srgb, var(--davitienda-primary) 25%, transparent);
+  overflow: hidden;
+}
+
+.loader::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: var(--davitienda-primary);
+  animation: dv-loader 1.1s ease-in-out infinite;
+}
+
+@keyframes dv-loader {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(120%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}

@@ -1,21 +1,21 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { App } from './app';
-import { CatalogApi } from './core/api/catalog-api';
-import { CheckoutApi } from './core/api/checkout-api';
 import { Product } from './core/models/product.model';
-
-const emptyCatalog: Pick<CatalogApi, 'products'> = {
-  products: () => of<readonly Product[]>([]),
-};
+import { CatalogService } from './core/services/catalog.service';
+import { CheckoutService } from './core/services/checkout.service';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
-        { provide: CatalogApi, useValue: emptyCatalog },
-        { provide: CheckoutApi, useValue: { quote: () => of(null) } },
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: CatalogService, useValue: { products: () => of<readonly Product[]>([]) } },
+        { provide: CheckoutService, useValue: { quote: () => of(null) } },
       ],
     }).compileComponents();
   });

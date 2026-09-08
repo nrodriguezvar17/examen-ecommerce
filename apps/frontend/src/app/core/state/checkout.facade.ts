@@ -1,8 +1,8 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { debounceTime, of, switchMap, tap } from 'rxjs';
-import { CheckoutApi, QuoteRequest } from '../api/checkout-api';
 import { DiscountBreakdown } from '../models/discount-breakdown.model';
+import { CheckoutService, QuoteRequest } from '../services/checkout.service';
 import { CartStore } from './cart.store';
 
 /**
@@ -13,7 +13,7 @@ import { CartStore } from './cart.store';
 @Injectable({ providedIn: 'root' })
 export class CheckoutFacade {
   private readonly cart = inject(CartStore);
-  private readonly api = inject(CheckoutApi);
+  private readonly checkout = inject(CheckoutService);
 
   private readonly _coupon = signal<string | null>(null);
   private readonly _breakdown = signal<DiscountBreakdown | null>(null);
@@ -45,7 +45,7 @@ export class CheckoutFacade {
           this._couponError.set(null);
         }),
         debounceTime(250),
-        switchMap((req) => (req ? this.api.quote(req) : of(null))),
+        switchMap((req) => (req ? this.checkout.quote(req) : of(null))),
         takeUntilDestroyed(),
       )
       .subscribe((breakdown) => {

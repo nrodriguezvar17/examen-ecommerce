@@ -130,7 +130,8 @@ tasks.named('jacocoTestCoverageVerification') {
 	}
 }
 
-// El gate de cobertura queda definido pero aún NO cablea `check`: en la Fase 0 el motor de
-// descuentos es un esqueleto sin tests. Al terminar la Fase 1 (reglas + pruebas) se activa
-// descomentando la línea siguiente.
-// tasks.named('check') { dependsOn tasks.named('jacocoTestCoverageVerification') }
+// Gate de cobertura (requisito 4.3): `./gradlew check` falla si LINE o BRANCH < 80%
+// en checkout.domain / checkout.application (y equivalentes de catalog).
+tasks.named('check') {
+	dependsOn tasks.named('jacocoTestCoverageVerification')
+}

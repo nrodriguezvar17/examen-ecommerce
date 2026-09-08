@@ -30,7 +30,18 @@ skills mencionados están versionados en este repositorio bajo `.claude/`.
   mantiene deliberadamente **separado** de la implementación: si ambos se derivaran del
   mismo código, la prueba no valdría.
 
-*(Opcional / segundo skill)* `generador-mocks-checkoutservice`: andamiaje de mocks de
+### 1.2. `probar-endpoints`
+
+- **Ubicación:** [`.claude/skills/probar-endpoints/SKILL.md`](../.claude/skills/probar-endpoints/SKILL.md)
+  (+ `requests.http` para el IDE).
+- **Qué automatiza:** un *smoke test* de la API REST contra el backend en ejecución.
+  Ejercita cada endpoint, cubre los *edge cases* del enunciado (carrito vacío/corrupto,
+  cupón inválido/expirado, stock insuficiente, tope del 35 %) y contrasta los montos con
+  `packages/fixtures/discount-cases.json`.
+- **Salida:** tabla `passed/failed` por escenario (`N/15`). Regla: no se modifica código de
+  producción para que un escenario pase.
+
+*(Opcional / tercer skill)* `generador-mocks-checkoutservice`: andamiaje de mocks de
 Mockito para los puertos de `CheckoutService`. Pendiente de la Fase 1.
 
 ---

@@ -77,13 +77,15 @@ repositorio + sustentación (no "clonar y ejecutar en 2 minutos"), así que se p
   drift* de usar H2 en tests y otro motor en producción (comportamientos distintos en
   fechas, `numeric`, *upserts*, *locking*). Los tests de integración corren contra
   PostgreSQL real vía **Testcontainers**.
-- **Esquema versionado con Flyway** (`src/main/resources/db/migration/`): `V1__schema.sql`
-  crea las tablas, `V2__seed_catalog.sql` carga el catálogo de la demo. Hibernate queda en
-  `ddl-auto: validate` (solo verifica que las entidades cuadren con el esquema). Es la
-  práctica correcta en banca; `ddl-auto: update` no es aceptable en producción.
+- **Esquema versionado con Flyway** (`src/main/resources/db/migration/`, `V1`–`V4`):
+  `V1` esquema, `V2` vista, `V3` datos de referencia (estados, categorías, cupones),
+  `V4` catálogo + clientes de la demo. Hibernate queda en `ddl-auto: validate` (solo
+  verifica que las entidades cuadren con el esquema). Es la práctica correcta en banca;
+  `ddl-auto: update` no es aceptable en producción. Detalle en `docs/modelo-datos.md`.
 - **Arranque sin fricción real**: `apps/backend/compose.yaml` define el contenedor y
-  `spring-boot-docker-compose` lo **levanta y detiene automáticamente** en `./gradlew
-  bootRun`. Único prerrequisito nuevo: Docker (herramienta corporativa estándar).
+  `spring-boot-docker-compose` lo **levanta** en `./gradlew bootRun` (`lifecycle-management:
+  start-only` → sigue vivo para inspeccionarlo). Único prerrequisito nuevo: Docker
+  (herramienta corporativa estándar).
 - **En la sustentación** se puede mostrar la persistencia con `psql` o cualquier cliente
   contra `localhost:5432`, y el `flyway_schema_history` como evidencia del control de
   esquema.
@@ -100,7 +102,7 @@ examen-ecommerce/
 ├── apps/
 │   ├── backend/          # Spring Boot 4 + Java 17 (Gradle)
 │   │   ├── compose.yaml  # PostgreSQL 16 (lo levanta spring-boot-docker-compose en bootRun)
-│   │   └── src/main/resources/db/migration/   # V1__schema.sql, V2__seed_catalog.sql (Flyway)
+│   │   └── src/main/resources/db/migration/   # V1 esquema · V2 vista · V3-V4 seed (Flyway)
 │   └── frontend/         # Angular 22 (standalone)
 ├── packages/
 │   └── fixtures/         # discount-cases.json: oráculo de cálculo compartido por back y front

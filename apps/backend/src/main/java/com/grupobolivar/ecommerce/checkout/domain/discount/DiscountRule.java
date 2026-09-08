@@ -3,22 +3,21 @@ package com.grupobolivar.ecommerce.checkout.domain.discount;
 import com.grupobolivar.ecommerce.checkout.domain.model.Money;
 
 /**
- * Patrón <b>Strategy</b>: cada tipo de descuento acumulativo se encapsula en una
- * implementación independiente y testeable en aislamiento. El {@link DiscountPipeline}
- * las ejecuta en cascada, pasando a cada una el total corriente (ya afectado por las
- * reglas anteriores).
+ * <b>Strategy</b> pattern: each cumulative discount type is encapsulated in an independent
+ * implementation that can be tested in isolation. {@link DiscountPipeline} runs them as a
+ * chain, passing each one the running total (already affected by the previous rules).
  */
 public interface DiscountRule {
 
-	/** Tipo de descuento que representa esta regla (define también su orden). */
+	/** Discount type this rule represents (also defines its order). */
 	DiscountType type();
 
 	/**
-	 * Monto a descontar por esta regla sobre el total corriente.
+	 * Amount this rule discounts off the running total.
 	 *
-	 * @param context      carrito y cupón
-	 * @param runningTotal total tras aplicar las reglas anteriores
-	 * @return el descuento (o {@link Money#ZERO} si la regla no aplica)
+	 * @param context      cart and coupon
+	 * @param runningTotal total after applying the previous rules
+	 * @return the discount (or {@link Money#ZERO} if the rule does not apply)
 	 */
 	Money computeDiscount(DiscountContext context, Money runningTotal);
 }

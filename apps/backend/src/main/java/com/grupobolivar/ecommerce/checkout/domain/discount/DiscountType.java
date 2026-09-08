@@ -1,7 +1,7 @@
 package com.grupobolivar.ecommerce.checkout.domain.discount;
 
 /**
- * Tipos de descuento en su orden de precedencia (regla de negocio del enunciado).
+ * Discount types in their precedence order (business rules of the assignment).
  */
 public enum DiscountType {
 	CATEGORY,

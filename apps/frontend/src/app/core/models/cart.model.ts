@@ -1,4 +1,4 @@
-/** Línea del carrito en el cliente. El precio se guarda para calcular el subtotal en vivo (HU1). */
+/** Cart line on the client. The price is kept to compute the live subtotal (HU1). */
 export interface CartItem {
   readonly productId: number;
   readonly name: string;

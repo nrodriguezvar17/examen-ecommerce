@@ -3,9 +3,9 @@ package com.grupobolivar.ecommerce.checkout.domain.discount;
 import java.math.BigDecimal;
 
 /**
- * Configuración del motor, en tipos del dominio (sin anotaciones de Spring). La capa
- * de infraestructura lee las propiedades externas y construye este record antes de
- * pasarlo al {@link DiscountRuleFactory}.
+ * Engine configuration, expressed in domain types (no Spring annotations). The
+ * infrastructure layer reads the external properties and builds this record before passing
+ * it to {@link DiscountRuleFactory}.
  */
 public record DiscountConfig(
 		String categoryName,

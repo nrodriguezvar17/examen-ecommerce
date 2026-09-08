@@ -5,13 +5,13 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Regla 4 - Límite de Descuento Absoluto: el descuento total consolidado nunca puede
- * superar un porcentaje del valor total original (35% en el enunciado). Si la cascada
- * de reglas produce un descuento mayor, se trunca exactamente en el tope y el valor
- * final se recalcula sobre ese límite.
+ * Rule 4 - Absolute discount cap: the consolidated total discount may never exceed a
+ * percentage of the original total (35% in the assignment). If the rule cascade produces a
+ * larger discount, it is truncated exactly at the cap and the final amount is recomputed on
+ * that limit.
  *
- * <p>Es un post-procesador del {@link DiscountPipeline}, no una {@link DiscountRule}:
- * no descuenta, acota.
+ * <p>This is a post-processor of {@link DiscountPipeline}, not a {@link DiscountRule}: it
+ * does not discount, it bounds.
  */
 public final class AbsoluteCapPolicy {
 
@@ -22,10 +22,10 @@ public final class AbsoluteCapPolicy {
 	}
 
 	/**
-	 * @param originalTotal total antes de descuentos
-	 * @param lines         descuentos calculados por la cascada
-	 * @param runningTotal  total tras aplicar la cascada
-	 * @return el desglose final, truncado al tope si corresponde
+	 * @param originalTotal total before discounts
+	 * @param lines         discounts computed by the cascade
+	 * @param runningTotal  total after applying the cascade
+	 * @return the final breakdown, truncated to the cap if applicable
 	 */
 	public DiscountBreakdown enforce(Money originalTotal, List<DiscountLine> lines, Money runningTotal) {
 		Money rawDiscount = originalTotal.minus(runningTotal);

@@ -3,14 +3,14 @@ package com.grupobolivar.ecommerce.checkout.domain.model;
 import java.util.Objects;
 
 /**
- * Línea del carrito ya validada. El dominio no conoce IDs de base de datos ni JSON:
- * recibe datos planos y calcula.
+ * A validated cart line. The domain knows nothing about database IDs or JSON: it receives
+ * plain data and computes.
  *
- * @param productId  identificador del producto en el catálogo
- * @param name       nombre para el desglose
- * @param unitPrice  precio unitario
- * @param quantity   cantidad (> 0, se valida en el borde de la aplicación)
- * @param category   categoría del producto (p. ej. "Tecnología")
+ * @param productId product identifier in the catalog
+ * @param name      name for the breakdown
+ * @param unitPrice unit price
+ * @param quantity  quantity (&gt; 0, validated at the application boundary)
+ * @param category  product category (e.g. "Tecnología")
  */
 public record CartItem(long productId, String name, Money unitPrice, int quantity, String category) {
 
@@ -18,7 +18,7 @@ public record CartItem(long productId, String name, Money unitPrice, int quantit
 		Objects.requireNonNull(unitPrice, "unitPrice");
 		Objects.requireNonNull(category, "category");
 		if (quantity <= 0) {
-			throw new IllegalArgumentException("quantity debe ser > 0, fue: " + quantity);
+			throw new IllegalArgumentException("quantity must be > 0, was: " + quantity);
 		}
 	}
 

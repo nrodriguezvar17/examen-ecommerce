@@ -3,12 +3,12 @@ package com.grupobolivar.ecommerce.checkout.domain.coupon;
 import java.util.Optional;
 
 /**
- * Puerto: fuente de cupones. La implementación (en memoria, base de datos, servicio
- * externo...) vive en {@code infrastructure} y se inyecta en el dominio. Así el motor
- * de descuentos no depende de cómo se almacenan los cupones.
+ * Port: source of coupons. The implementation (in-memory, database, external service...)
+ * lives in {@code infrastructure} and is injected into the domain, so the discount engine
+ * does not depend on how coupons are stored.
  */
 public interface CouponCatalog {
 
-	/** Devuelve el cupón si existe y está activo; {@link Optional#empty()} en caso contrario. */
+	/** Returns the coupon if it exists and is active; {@link Optional#empty()} otherwise. */
 	Optional<Coupon> findActive(String code);
 }

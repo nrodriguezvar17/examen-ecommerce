@@ -1,4 +1,4 @@
-/** Desglose de descuentos devuelto por `POST /api/checkout/quote` y `POST /api/checkout`. */
+/** Discount breakdown returned by `POST /api/checkout/quote` and `POST /api/checkout`. */
 export type DiscountType = 'CATEGORY' | 'VOLUME' | 'COUPON';
 
 export interface DiscountLine {
@@ -10,9 +10,9 @@ export interface DiscountBreakdown {
   readonly originalTotal: number;
   readonly lines: readonly DiscountLine[];
   readonly totalDiscount: number;
-  /** Porcentaje efectivo sobre el total original (0..1). */
+  /** Effective rate over the original total (0..1). */
   readonly effectiveRate: number;
   readonly finalTotal: number;
-  /** true → se alcanzó el tope del 35 %; dispara la alerta persistente (HU4). */
+  /** true -> the 35% cap was reached; triggers the persistent alert (HU4). */
   readonly capReached: boolean;
 }

@@ -4,25 +4,25 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Carrito inmutable. Expone los agregados que necesita el motor de descuentos:
- * el total original y el subtotal por categoría.
+ * Immutable cart. Exposes the aggregates the discount engine needs: the original total and
+ * the per-category subtotal.
  */
 public record Cart(List<CartItem> items) {
 
 	public Cart {
 		Objects.requireNonNull(items, "items");
 		if (items.isEmpty()) {
-			throw new IllegalArgumentException("El carrito no puede estar vacío");
+			throw new IllegalArgumentException("Cart must not be empty");
 		}
 		items = List.copyOf(items);
 	}
 
-	/** Suma de (precioUnitario x cantidad) de todas las líneas: el "subtotal original". */
+	/** Sum of (unitPrice * quantity) over every line: the "original subtotal". */
 	public Money originalTotal() {
 		return items.stream().map(CartItem::lineTotal).reduce(Money.ZERO, Money::plus);
 	}
 
-	/** Subtotal de las líneas que pertenecen a la categoría indicada. */
+	/** Subtotal of the lines that belong to the given category. */
 	public Money subtotalForCategory(String categoryName) {
 		return items.stream()
 				.filter(item -> item.isCategory(categoryName))

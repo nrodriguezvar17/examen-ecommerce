@@ -1,0 +1,22 @@
+<article class="dv-card card">
+  <div class="thumb" [attr.data-cat]="product().category">
+    <span aria-hidden="true">{{ product().category.charAt(0) }}</span>
+  </div>
+  <div class="body">
+    <span class="dv-badge">{{ product().category }}</span>
+    <h3>{{ product().displayName }}</h3>
+    <p class="dv-muted desc">{{ product().description }}</p>
+    <app-star-rating [average]="product().ratingAverage" [count]="product().reviewCount" />
+    <div class="foot">
+      <span class="price">{{ product().unitPrice | money }}</span>
+      @if (product().stock > 0) {
+        <button type="button" class="dv-btn dv-btn--primary" (click)="add.emit(product())">
+          Agregar
+        </button>
+      } @else {
+        <button type="button" class="dv-btn dv-btn--ghost" disabled>Sin stock</button>
+      }
+    </div>
+    <span class="stock dv-muted">Stock: {{ product().stock }}</span>
+  </div>
+</article>

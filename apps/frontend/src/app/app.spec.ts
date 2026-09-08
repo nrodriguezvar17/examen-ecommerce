@@ -1,24 +1,34 @@
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { App } from './app';
+import { CatalogApi } from './core/api/catalog-api';
+import { CheckoutApi } from './core/api/checkout-api';
+import { Product } from './core/models/product.model';
+
+const emptyCatalog: Pick<CatalogApi, 'products'> = {
+  products: () => of<readonly Product[]>([]),
+};
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-    })
-      .compileComponents();
+      providers: [
+        { provide: CatalogApi, useValue: emptyCatalog },
+        { provide: CheckoutApi, useValue: { quote: () => of(null) } },
+      ],
+    }).compileComponents();
   });
 
-  it('should create the app', () => {
+  it('creates the app', () => {
     const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should render title', async () => {
+  it('renders the Davitienda topbar', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, frontend');
+    expect(compiled.querySelector('.brand')?.textContent).toContain('Davi');
   });
 });

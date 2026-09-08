@@ -3,7 +3,10 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
-    "schematicCollections": ["angular-eslint"]
+    "schematicCollections": [
+      "angular-eslint"
+    ],
+    "analytics": false
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -58,6 +61,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
           "configurations": {
             "production": {
               "buildTarget": "frontend:build:production"
@@ -79,7 +85,12 @@
               "src/**/*.routes.ts",
               "src/**/*.config.ts",
               "src/**/index.ts",
-              "src/app/core/models/**"
+              "src/app/core/models/**",
+              "src/app/app.ts",
+              "src/app/shared/**",
+              "src/app/features/**",
+              "src/app/core/api/**",
+              "src/app/core/state/checkout.facade.ts"
             ],
             "coverageThresholds": {
               "statements": 80,

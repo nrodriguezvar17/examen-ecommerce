@@ -35,7 +35,7 @@ export class CartStore {
       }
       const line: CartItem = {
         productId: product.id,
-        name: product.name,
+        name: product.displayName,
         unitPrice: product.unitPrice,
         category: product.category,
         quantity,

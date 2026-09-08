@@ -1,0 +1,23 @@
+<form class="coupon" (ngSubmit)="apply()">
+  <label class="field">
+    <span class="dv-muted">Cupón</span>
+    <input
+      class="dv-input"
+      name="code"
+      [(ngModel)]="code"
+      placeholder="Ej. WELCOME2026"
+      autocomplete="off"
+    />
+  </label>
+  <button type="submit" class="dv-btn dv-btn--ghost">Aplicar</button>
+</form>
+
+@if (facade.coupon(); as applied) {
+  <p class="applied dv-muted">
+    Cupón aplicado: <strong>{{ applied }}</strong>
+    <button type="button" class="link" (click)="clear()">quitar</button>
+  </p>
+}
+@if (facade.couponError(); as error) {
+  <p class="error" role="alert">{{ error }}</p>
+}

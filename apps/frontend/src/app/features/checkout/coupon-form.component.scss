@@ -1,0 +1,33 @@
+.coupon {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  font-size: 0.8rem;
+}
+
+.applied {
+  font-size: 0.82rem;
+  margin-top: 0.4rem;
+}
+
+.link {
+  background: none;
+  border: none;
+  color: var(--davitienda-primary);
+  text-decoration: underline;
+  padding: 0 0 0 0.25rem;
+}
+
+.error {
+  color: var(--davitienda-primary);
+  font-size: 0.82rem;
+  margin-top: 0.3rem;
+}

@@ -1,0 +1,10 @@
+<span class="stars" [attr.aria-label]="average() + ' de 5 estrellas'">
+  @for (star of stars; track star) {
+    <span aria-hidden="true" [class.filled]="star <= rounded()">★</span>
+  }
+  @if (count() > 0) {
+    <span class="count dv-muted">{{ average() }} ({{ count() }})</span>
+  } @else {
+    <span class="count dv-muted">Sin reseñas</span>
+  }
+</span>

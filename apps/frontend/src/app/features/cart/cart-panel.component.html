@@ -1,0 +1,68 @@
+<aside class="dv-card panel">
+  <h2>Tu carrito</h2>
+
+  @if (cart.isEmpty()) {
+    <p class="dv-muted">Agrega productos para empezar.</p>
+  } @else {
+    <ul class="lines">
+      @for (line of cart.items(); track line.productId) {
+        <li>
+          <div class="info">
+            <span class="name">{{ line.name }}</span>
+            <span class="dv-muted">{{ line.unitPrice | money }} c/u</span>
+          </div>
+          <div class="qty">
+            <button
+              type="button"
+              class="dv-btn dv-btn--ghost step"
+              (click)="cart.setQuantity(line.productId, line.quantity - 1)"
+              aria-label="Quitar una unidad"
+            >
+              −
+            </button>
+            <span>{{ line.quantity }}</span>
+            <button
+              type="button"
+              class="dv-btn dv-btn--ghost step"
+              (click)="cart.setQuantity(line.productId, line.quantity + 1)"
+              aria-label="Agregar una unidad"
+            >
+              +
+            </button>
+          </div>
+          <span class="line-total">{{ line.unitPrice * line.quantity | money }}</span>
+          <button
+            type="button"
+            class="remove"
+            (click)="cart.remove(line.productId)"
+            aria-label="Eliminar del carrito"
+          >
+            ✕
+          </button>
+        </li>
+      }
+    </ul>
+
+    <div class="row subtotal">
+      <span>Subtotal</span>
+      <strong>{{ cart.subtotal() | money }}</strong>
+    </div>
+
+    <app-coupon-form />
+    <app-discount-breakdown />
+    <app-savings-limit-alert />
+
+    <button
+      type="button"
+      class="dv-btn dv-btn--primary confirm"
+      [disabled]="checkout.loading()"
+      (click)="confirm()"
+    >
+      {{ checkout.loading() ? 'Calculando…' : 'Confirmar compra' }}
+    </button>
+
+    @if (confirmed()) {
+      <p class="ok" role="status">✓ Compra confirmada (prototipo — el backend llega en Fase 1).</p>
+    }
+  }
+</aside>

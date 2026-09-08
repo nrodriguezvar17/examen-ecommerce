@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: ecommerce-backend
+  datasource:
+    # H2 en modo fichero: la orden persiste entre reinicios -> permite demostrar
+    # "confirmación de la persistencia desde el backend" (HU3). Ver docs/arquitectura.md.
+    url: jdbc:h2:file:./data/ecommerce;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate.format_sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# ---------------------------------------------------------------------------
+# Parámetros del motor de descuentos acumulativos (reglas de negocio del enunciado).
+# Se externalizan para poder (a) ajustar precedencias/porcentajes sin recompilar y
+# (b) registrar un cupón de prueba que fuerce el truncamiento del 35% en la demo.
+# ---------------------------------------------------------------------------
+discount:
+  category:
+    name: "Tecnología"
+    percent: 0.10
+  volume:
+    threshold: 100.00
+    percent: 0.05
+  cap:
+    percent: 0.35
+  coupons:
+    - code: "WELCOME2026"
+      percent: 0.15
+      active: true
+    # Cupón de prueba: el catálogo real (10% -> 5% -> 15% en cascada) nunca supera ~27,3%,
+    # así que el tope del 35% es inalcanzable con WELCOME2026. Este cupón permite
+    # ejercitar y demostrar el truncamiento (ver docs/arquitectura.md §trade-offs).
+    - code: "MEGADESCUENTO"
+      percent: 0.50
+      active: true

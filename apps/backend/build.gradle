@@ -1,0 +1,93 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.1.1'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
+}
+
+group = 'com.grupobolivar'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-h2console'
+	runtimeOnly 'com.h2database:h2'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// ---------------------------------------------------------------------------
+// Cobertura (requisito 4.3 del enunciado: >= 80% en las capas lógicas esenciales).
+// El denominador de cobertura se restringe al motor de descuentos y a la
+// orquestación de aplicación; DTOs, entidades JPA, configuración y el bootstrap
+// de Spring quedan fuera porque no contienen lógica de negocio que testear.
+// ---------------------------------------------------------------------------
+ext.coverageIncludes = [
+	'com/grupobolivar/ecommerce/checkout/domain/**',
+	'com/grupobolivar/ecommerce/checkout/application/**',
+	'com/grupobolivar/ecommerce/catalog/domain/**',
+	'com/grupobolivar/ecommerce/catalog/application/**',
+]
+ext.coverageExcludes = [
+	'**/*Application.*',
+	'**/*Entity.*',
+	'**/*Request.*',
+	'**/*Response.*',
+	'**/dto/**',
+	'**/config/**',
+	'**/*Configuration.*',
+	'**/*Properties.*',
+	'**/package-info.*',
+]
+
+def scopedClassDirs(classDirs) {
+	files(classDirs.files.collect { dir ->
+		fileTree(dir: dir, includes: coverageIncludes, excludes: coverageExcludes)
+	})
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+	finalizedBy tasks.named('jacocoTestReport')
+}
+
+tasks.named('jacocoTestReport') {
+	dependsOn tasks.named('test')
+	reports {
+		xml.required = true
+		html.required = true
+	}
+	classDirectories.setFrom(scopedClassDirs(sourceSets.main.output.classesDirs))
+}
+
+tasks.named('jacocoTestCoverageVerification') {
+	dependsOn tasks.named('jacocoTestReport')
+	classDirectories.setFrom(scopedClassDirs(sourceSets.main.output.classesDirs))
+	violationRules {
+		rule {
+			element = 'BUNDLE'
+			limit { counter = 'LINE';   minimum = 0.80 }
+			limit { counter = 'BRANCH'; minimum = 0.80 }
+		}
+	}
+}
+
+tasks.named('check') {
+	dependsOn tasks.named('jacocoTestCoverageVerification')
+}

@@ -1,0 +1,38 @@
+.breakdown {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.minus {
+  color: var(--davitienda-success);
+  font-variant-numeric: tabular-nums;
+}
+
+.none {
+  font-size: 0.85rem;
+}
+
+.saving {
+  border-top: 1px dashed var(--davitienda-border);
+  padding-top: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.final {
+  border-top: 1px solid var(--davitienda-border);
+  padding-top: 0.5rem;
+  margin-top: 0.2rem;
+  font-size: 1.05rem;
+}
+
+.final strong {
+  font-size: 1.15rem;
+}

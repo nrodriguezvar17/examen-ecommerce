@@ -1,0 +1,21 @@
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.75rem 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--dv-radius-sm);
+  background: color-mix(in srgb, var(--davitienda-success) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--davitienda-success) 45%, transparent);
+  color: #0f5132;
+}
+
+.alert p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.icon {
+  font-size: 1.2rem;
+}

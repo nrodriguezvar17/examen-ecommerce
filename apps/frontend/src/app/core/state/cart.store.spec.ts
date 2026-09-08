@@ -2,8 +2,16 @@ import { TestBed } from '@angular/core/testing';
 import { Product } from '../models/product.model';
 import { CartStore } from './cart.store';
 
-const laptop: Product = { id: 1, name: 'Laptop', unitPrice: 800, category: 'Tecnología', stock: 5 };
-const book: Product = { id: 2, name: 'Libro', unitPrice: 30, category: 'Libros', stock: 10 };
+const laptop: Product = {
+  id: 1, sku: 'TEC-LAP-999', name: 'Laptop', displayName: 'Laptop',
+  description: '', unitPrice: 800, category: 'Tecnología', stock: 5,
+  ratingAverage: 0, reviewCount: 0,
+};
+const book: Product = {
+  id: 2, sku: 'LIB-999', name: 'Libro', displayName: 'Libro',
+  description: '', unitPrice: 30, category: 'Libros', stock: 10,
+  ratingAverage: 0, reviewCount: 0,
+};
 
 describe('CartStore', () => {
   let store: CartStore;

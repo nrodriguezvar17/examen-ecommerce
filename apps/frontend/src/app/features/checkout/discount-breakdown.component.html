@@ -1,0 +1,21 @@
+@if (breakdown(); as data) {
+  <div class="breakdown">
+    @for (line of data.lines; track line.type) {
+      <div class="row">
+        <span>{{ label(line.type) }}</span>
+        <span class="minus">−{{ line.amount | money }}</span>
+      </div>
+    }
+    @if (data.lines.length === 0) {
+      <p class="dv-muted none">Sin descuentos aplicables.</p>
+    }
+    <div class="row saving">
+      <span>Ahorro total ({{ data.effectiveRate | percent: '1.0-2' }})</span>
+      <strong class="minus">−{{ data.totalDiscount | money }}</strong>
+    </div>
+    <div class="row final">
+      <span>Total a pagar</span>
+      <strong>{{ data.finalTotal | money }}</strong>
+    </div>
+  </div>
+}

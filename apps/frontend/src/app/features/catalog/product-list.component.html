@@ -1,0 +1,11 @@
+<section>
+  <h2>Catálogo</h2>
+  @if (loading()) {
+    <p class="dv-muted">Cargando productos…</p>
+  }
+  <div class="grid">
+    @for (product of products(); track product.id) {
+      <app-product-card [product]="product" (add)="onAdd($event)" />
+    }
+  </div>
+</section>

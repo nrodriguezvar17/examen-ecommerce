@@ -1,0 +1,102 @@
+### API del e-commerce — colección de requests (REST Client / IntelliJ HTTP).
+### Requiere el backend en http://localhost:8080 (ver SKILL.md).
+### Los endpoints /api/* se implementan en la Fase 1; por ahora solo responde /actuator.
+
+@host = http://localhost:8080
+
+### 1. Health
+GET {{host}}/actuator/health
+
+### 2. Catálogo (HU1)
+GET {{host}}/api/products
+
+### 3. Quote — happy path con WELCOME2026 (HU2)
+POST {{host}}/api/checkout/quote
+Content-Type: application/json
+
+{
+  "items": [
+    { "productId": 1, "quantity": 1 },
+    { "productId": 2, "quantity": 2 },
+    { "productId": 6, "quantity": 4 }
+  ],
+  "couponCode": "WELCOME2026"
+}
+
+### 4. Quote — sin cupón
+POST {{host}}/api/checkout/quote
+Content-Type: application/json
+
+{
+  "items": [ { "productId": 1, "quantity": 1 } ]
+}
+
+### 5. Quote — cupón inexistente (se ignora)
+POST {{host}}/api/checkout/quote
+Content-Type: application/json
+
+{
+  "items": [ { "productId": 1, "quantity": 1 } ],
+  "couponCode": "NOEXISTE"
+}
+
+### 6. Quote — cupón expirado (se ignora)
+POST {{host}}/api/checkout/quote
+Content-Type: application/json
+
+{
+  "items": [ { "productId": 1, "quantity": 1 } ],
+  "couponCode": "BLACKFRIDAY2025"
+}
+
+### 7. Quote — carrito vacío (400/422)
+POST {{host}}/api/checkout/quote
+Content-Type: application/json
+
+{ "items": [] }
+
+### 8. Quote — cantidad inválida (400)
+POST {{host}}/api/checkout/quote
+Content-Type: application/json
+
+{ "items": [ { "productId": 1, "quantity": -2 } ] }
+
+### 9. Checkout — happy path (HU3)
+POST {{host}}/api/checkout
+Content-Type: application/json
+
+{
+  "items": [
+    { "productId": 1, "quantity": 1 },
+    { "productId": 6, "quantity": 4 }
+  ],
+  "couponCode": "WELCOME2026",
+  "customerUsername": "ana"
+}
+
+### 10. Checkout — stock insuficiente (409). productId 4 = "Auriculares Bluetooth", stock 3
+POST {{host}}/api/checkout
+Content-Type: application/json
+
+{
+  "items": [ { "productId": 4, "quantity": 99 } ],
+  "customerUsername": "ana"
+}
+
+### 11. Detalle de una orden (reemplazar el radicado por el del paso 9)
+GET {{host}}/api/orders/ORD-00000000000000000
+
+### 12a. Pseudo-login OK
+GET {{host}}/api/customers/ana
+
+### 12b. Pseudo-login KO (404)
+GET {{host}}/api/customers/nadie
+
+### 13. Compras del cliente
+GET {{host}}/api/customers/ana/orders
+
+### 14. Avanzar estado de la orden (reemplazar el radicado)
+PATCH {{host}}/api/orders/ORD-00000000000000000/status
+Content-Type: application/json
+
+{ "status": "ENVIADO" }

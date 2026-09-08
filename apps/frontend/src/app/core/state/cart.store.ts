@@ -3,9 +3,9 @@ import { CartItem } from '../models/cart.model';
 import { Product } from '../models/product.model';
 
 /**
- * Estado del carrito. Patrón <b>Observer</b>: el estado vive en signals y los valores
- * derivados (subtotal, número de ítems) son `computed`. Los componentes reaccionan a los
- * cambios sin suscripciones manuales — base de la actualización en vivo de HU1.
+ * Cart state. <b>Observer</b> pattern: state lives in signals and derived values (subtotal,
+ * item count) are `computed`. Components react to changes with no manual subscriptions —
+ * the basis of the live update in HU1.
  */
 @Injectable({ providedIn: 'root' })
 export class CartStore {

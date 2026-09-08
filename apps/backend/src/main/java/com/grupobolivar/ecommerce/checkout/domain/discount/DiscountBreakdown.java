@@ -5,15 +5,15 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Resultado inmutable del motor de descuentos. Es lo que consume la capa de API para
- * armar la respuesta (HU2: desglose, % efectivo, ahorro total, valor final; HU4: {@code capReached}).
+ * Immutable result of the discount engine. The API layer consumes it to build the response
+ * (HU2: breakdown, effective rate, total savings, final amount; HU4: {@code capReached}).
  *
- * @param originalTotal  subtotal original (antes de descuentos)
- * @param lines          descuentos aplicados, en orden de precedencia
- * @param totalDiscount  ahorro total consolidado (ya truncado al tope si corresponde)
- * @param effectiveRate  porcentaje de descuento efectivo sobre el total original (0..1, 4 decimales)
- * @param finalTotal     valor final a pagar
- * @param capReached     true si se alcanzó/superó el tope del 35% y se truncó (dispara la alerta de HU4)
+ * @param originalTotal original subtotal (before discounts)
+ * @param lines         discounts applied, in precedence order
+ * @param totalDiscount consolidated savings (already truncated to the cap if applicable)
+ * @param effectiveRate effective discount rate over the original total (0..1, 4 decimals)
+ * @param finalTotal    final amount to pay
+ * @param capReached    true when the 35% cap was reached/exceeded and truncated (drives HU4)
  */
 public record DiscountBreakdown(
 		Money originalTotal,

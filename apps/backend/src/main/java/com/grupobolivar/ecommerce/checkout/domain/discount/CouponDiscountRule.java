@@ -4,9 +4,9 @@ import com.grupobolivar.ecommerce.checkout.domain.coupon.CouponCatalog;
 import com.grupobolivar.ecommerce.checkout.domain.model.Money;
 
 /**
- * Regla 3 - Descuento por Cupón: si se ingresó un código de cupón activo, aplica su
- * porcentaje sobre el total corriente (ya afectado por las reglas 1 y 2). Un cupón
- * inexistente, inactivo o vacío no produce descuento.
+ * Rule 3 - Coupon discount: if an active coupon code was entered, applies its percentage
+ * over the running total (already affected by rules 1 and 2). A missing, inactive or blank
+ * coupon produces no discount.
  */
 public final class CouponDiscountRule implements DiscountRule {
 

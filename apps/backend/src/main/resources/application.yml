@@ -8,7 +8,9 @@ spring:
     compose:
       enabled: true
       file: compose.yaml
-      lifecycle-management: start-and-stop
+      # start-only: al parar la app el contenedor sigue vivo, para poder inspeccionar
+      # la base con psql / un cliente. Se detiene con `docker compose down`.
+      lifecycle-management: start-only
 
   datasource:
     url: jdbc:postgresql://localhost:5432/ecommerce

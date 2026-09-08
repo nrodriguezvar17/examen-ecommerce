@@ -5,9 +5,9 @@ import java.math.RoundingMode;
 import java.util.Objects;
 
 /**
- * Value object monetario inmutable. Toda la aritmética del motor de descuentos usa
- * {@link BigDecimal} con escala 2 y redondeo HALF_UP para garantizar "totales
- * desglosados exactos" (HU3) y evitar el error de coma flotante de {@code double}.
+ * Immutable monetary value object. All discount-engine arithmetic uses {@link BigDecimal}
+ * with scale 2 and HALF_UP rounding to guarantee the "exact itemised totals" required by
+ * HU3 and to avoid the floating-point drift of {@code double}.
  */
 public final class Money {
 
@@ -43,7 +43,7 @@ public final class Money {
 		return new Money(this.amount.multiply(BigDecimal.valueOf(quantity)));
 	}
 
-	/** Aplica un porcentaje (p. ej. 0.10) sobre este monto. */
+	/** Applies a rate (e.g. 0.10) to this amount. */
 	public Money applyRate(BigDecimal rate) {
 		return new Money(this.amount.multiply(rate));
 	}
@@ -56,7 +56,7 @@ public final class Money {
 		return this.amount.compareTo(other.amount) > 0;
 	}
 
-	/** Proporción de este monto respecto de {@code base}, con 4 decimales (0 si base es 0). */
+	/** This amount as a fraction of {@code base}, with 4 decimals (0 when base is 0). */
 	public BigDecimal rateOf(Money base) {
 		if (base.amount.signum() == 0) {
 			return BigDecimal.ZERO.setScale(RATE_SCALE, ROUNDING);

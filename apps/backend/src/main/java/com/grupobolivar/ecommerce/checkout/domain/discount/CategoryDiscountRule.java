@@ -4,9 +4,9 @@ import com.grupobolivar.ecommerce.checkout.domain.model.Money;
 import java.math.BigDecimal;
 
 /**
- * Regla 1 - Descuento de Categoría: si el carrito contiene al menos un producto de la
- * categoría configurada (p. ej. "Tecnología"), aplica un porcentaje sobre el subtotal
- * de <b>esos productos específicos</b>, no sobre todo el carrito.
+ * Rule 1 - Category discount: if the cart contains at least one product of the configured
+ * category (e.g. "Tecnología"), applies a percentage over the subtotal of <b>those
+ * specific products</b>, not over the whole cart.
  */
 public final class CategoryDiscountRule implements DiscountRule {
 

@@ -1,4 +1,4 @@
-/** Producto del catálogo. Refleja el contrato de `GET /api/products`. */
+/** Catalog product. Mirrors the `GET /api/products` contract. */
 export interface Product {
   readonly id: number;
   readonly name: string;

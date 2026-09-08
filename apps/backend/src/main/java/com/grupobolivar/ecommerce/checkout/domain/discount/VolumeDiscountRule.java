@@ -4,10 +4,10 @@ import com.grupobolivar.ecommerce.checkout.domain.model.Money;
 import java.math.BigDecimal;
 
 /**
- * Regla 2 - Descuento por Volumen: si el total corriente (ya con el descuento de
- * categoría aplicado) <b>supera</b> el umbral configurado (p. ej. $100), aplica un
- * porcentaje adicional sobre ese total corriente. El umbral es estricto: exactamente
- * $100 no dispara el descuento.
+ * Rule 2 - Volume discount: if the running total (already with the category discount
+ * applied) is <b>strictly greater</b> than the configured threshold (e.g. $100), applies an
+ * extra percentage over that running total. The threshold is strict: exactly $100 does not
+ * trigger the discount.
  */
 public final class VolumeDiscountRule implements DiscountRule {
 

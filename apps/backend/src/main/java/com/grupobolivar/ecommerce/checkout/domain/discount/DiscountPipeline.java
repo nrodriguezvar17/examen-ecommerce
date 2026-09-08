@@ -5,13 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Motor de descuentos acumulativos. Aplica las {@link DiscountRule} en cadena
- * (patrón <b>Chain of Responsibility / Pipeline</b>): cada regla opera sobre el total
- * corriente resultante de la anterior — de ahí la cascada multiplicativa, no aditiva —
- * y al final delega en {@link AbsoluteCapPolicy} el tope del 35%.
+ * Cumulative discount engine. Applies the {@link DiscountRule}s as a chain (<b>Chain of
+ * Responsibility / Pipeline</b> pattern): each rule operates on the running total left by
+ * the previous one — hence the multiplicative cascade, not an additive sum — and finally
+ * delegates the 35% cap to {@link AbsoluteCapPolicy}.
  *
- * <p>Clase pura: sin Spring, sin JPA, sin HTTP. Recibe un {@link DiscountContext} y
- * devuelve un {@link DiscountBreakdown}.
+ * <p>Pure class: no Spring, no JPA, no HTTP. Takes a {@link DiscountContext} and returns a
+ * {@link DiscountBreakdown}.
  */
 public final class DiscountPipeline {
 

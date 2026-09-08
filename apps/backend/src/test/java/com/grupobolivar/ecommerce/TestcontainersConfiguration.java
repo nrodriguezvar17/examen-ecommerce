@@ -7,9 +7,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * Provee un PostgreSQL real (misma imagen que producción) para los tests de integración.
- * {@code @ServiceConnection} conecta el datasource de Spring al contenedor sin propiedades
- * manuales. Los tests unitarios del motor de descuentos no usan esto: son Java puro.
+ * Provides a real PostgreSQL (same image as production) for integration tests.
+ * {@code @ServiceConnection} wires Spring's datasource to the container with no manual
+ * properties. Unit tests of the discount engine do not use this: they are plain Java.
  */
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {

@@ -53,14 +53,33 @@ cd apps/backend
 ./gradlew bootRun
 ```
 
-`spring-boot-docker-compose` levanta `compose.yaml` (PostgreSQL 16) al arrancar y lo
-detiene al parar la app. Flyway aplica el esquema (`V1__schema.sql`) y el catálogo de la
-demo (`V2__seed_catalog.sql`).
+`spring-boot-docker-compose` levanta `compose.yaml` (PostgreSQL 16) al arrancar
+(`lifecycle-management: start-only` → el contenedor sigue vivo al parar la app). Flyway
+aplica las migraciones `V1`–`V4` (`src/main/resources/db/migration/`, ver
+[`docs/modelo-datos.md`](docs/modelo-datos.md)).
 
 - API: `http://localhost:8080/api/...`
 - Health: `http://localhost:8080/actuator/health`
-- Base de datos: `postgresql://localhost:5432/ecommerce` (usuario y contraseña `ecommerce`).
-  Levantar el contenedor a mano, si se quiere: `docker compose up -d` desde `apps/backend/`.
+
+#### Conectarse a la base de datos
+
+```bash
+cd apps/backend
+docker compose up -d                                   # PostgreSQL 16 en localhost:5432
+docker compose exec postgres psql -U ecommerce -d ecommerce   # cliente psql dentro del contenedor
+```
+
+Datos de conexión para un cliente externo (DBeaver, pgAdmin, IntelliJ…):
+
+| | |
+|---|---|
+| Host / Puerto | `localhost` / `5432` |
+| Base de datos | `ecommerce` |
+| Usuario / Contraseña | `ecommerce` / `ecommerce` |
+| JDBC URL | `jdbc:postgresql://localhost:5432/ecommerce` |
+
+Migraciones de forma independiente: `./gradlew flywayMigrate` · `flywayInfo` · `flywayClean`.
+Detener la base: `docker compose down` (con `-v` para borrar también los datos).
 
 ### Frontend — http://localhost:4200
 

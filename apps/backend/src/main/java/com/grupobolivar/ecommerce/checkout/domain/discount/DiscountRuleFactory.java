@@ -5,9 +5,9 @@ import com.grupobolivar.ecommerce.checkout.domain.model.Money;
 import java.util.List;
 
 /**
- * Patrón <b>Factory</b>: centraliza la construcción del {@link DiscountPipeline} con
- * las reglas en su <b>orden de precedencia</b> (Categoría -> Volumen -> Cupón) y el
- * tope. El resto del sistema no instancia reglas a mano ni conoce el orden.
+ * <b>Factory</b> pattern: centralises building the {@link DiscountPipeline} with the rules
+ * in their <b>precedence order</b> (Category -&gt; Volume -&gt; Coupon) and the cap. The
+ * rest of the system never instantiates rules by hand nor knows the order.
  */
 public final class DiscountRuleFactory {
 

@@ -29,6 +29,16 @@ repositories {
 	mavenCentral()
 }
 
+// El oráculo de descuentos (packages/fixtures/discount-cases.json) queda en el classpath
+// de test para el @ParameterizedTest de DiscountPipeline: mismos números que el frontend.
+sourceSets {
+	test {
+		resources {
+			srcDir file('../../packages/fixtures')
+		}
+	}
+}
+
 // Migraciones ejecutables de forma independiente de la app (./gradlew flywayMigrate,
 // flywayInfo, flywayClean). Apunta al PostgreSQL de compose.yaml.
 flyway {
@@ -55,6 +65,8 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
+	// Para leer el oráculo discount-cases.json en DiscountPipelineTest.
+	testImplementation 'com.fasterxml.jackson.core:jackson-databind'
 	// Tests de integración contra PostgreSQL real vía Testcontainers (misma BD que prod).
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'

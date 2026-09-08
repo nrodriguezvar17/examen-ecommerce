@@ -1,0 +1,25 @@
+# --- Sistema operativo / editores ---
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# --- Backend (Gradle / Java) ---
+apps/backend/.gradle/
+apps/backend/build/
+apps/backend/bin/
+apps/backend/out/
+apps/backend/data/            # base de datos H2 en modo fichero (generada al ejecutar)
+*.class
+
+# --- Frontend (Node / Angular) ---
+apps/frontend/node_modules/
+apps/frontend/dist/
+apps/frontend/.angular/
+apps/frontend/coverage/
+npm-debug.log*
+
+# --- Genéricos ---
+*.log

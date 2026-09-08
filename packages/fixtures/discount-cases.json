@@ -1,0 +1,129 @@
+{
+  "$comment": "Oráculo de cálculo del motor de descuentos acumulativos. Fuente de verdad compartida por las pruebas del backend (JUnit @ParameterizedTest sobre DiscountPipeline) y del frontend (Vitest sobre el mapeo del desglose). Montos con 2 decimales (HALF_UP); effectiveRate con 4. 'lines' = descuento crudo calculado por cada regla en la cascada; 'totalDiscount'/'finalTotal' ya incluyen el tope del 35 % cuando aplica. Ver docs/arquitectura.md secciones 3 y 7.",
+  "rules": {
+    "categoryName": "Tecnología",
+    "categoryPercent": 0.10,
+    "volumeThreshold": 100.0,
+    "volumePercent": 0.05,
+    "couponPercent": { "WELCOME2026": 0.15, "MEGADESCUENTO": 0.50, "EXPIRED2020": 0.10 },
+    "couponActive": { "WELCOME2026": true, "MEGADESCUENTO": true, "EXPIRED2020": false },
+    "capPercent": 0.35
+  },
+  "cases": [
+    {
+      "name": "cascada-completa-sin-tope",
+      "description": "Tecnología + no-Tecnología, subtotal > 100, cupón válido. Cascada 10% -> 5% -> 15%.",
+      "items": [
+        { "productId": 1, "name": "Laptop", "unitPrice": 800.00, "quantity": 1, "category": "Tecnología" },
+        { "productId": 2, "name": "Mouse inalámbrico", "unitPrice": 25.00, "quantity": 2, "category": "Tecnología" },
+        { "productId": 3, "name": "Cuaderno", "unitPrice": 5.00, "quantity": 4, "category": "Papelería" }
+      ],
+      "coupon": "WELCOME2026",
+      "expected": {
+        "originalTotal": 870.00,
+        "lines": { "CATEGORY": 85.00, "VOLUME": 39.25, "COUPON": 111.86 },
+        "totalDiscount": 236.11,
+        "effectiveRate": 0.2714,
+        "finalTotal": 633.89,
+        "capReached": false
+      }
+    },
+    {
+      "name": "sin-tecnologia-sin-volumen",
+      "description": "Sin productos de Tecnología (d1 = 0) y subtotal <= 100 (d2 = 0). Solo aplica el cupón.",
+      "items": [
+        { "productId": 4, "name": "Novela", "unitPrice": 30.00, "quantity": 2, "category": "Libros" },
+        { "productId": 5, "name": "Lápiz", "unitPrice": 3.00, "quantity": 5, "category": "Papelería" }
+      ],
+      "coupon": "WELCOME2026",
+      "expected": {
+        "originalTotal": 75.00,
+        "lines": { "CATEGORY": 0.00, "VOLUME": 0.00, "COUPON": 11.25 },
+        "totalDiscount": 11.25,
+        "effectiveRate": 0.1500,
+        "finalTotal": 63.75,
+        "capReached": false
+      }
+    },
+    {
+      "name": "umbral-volumen-exacto-100-no-dispara",
+      "description": "Total corriente == 100.00 exacto: la regla de volumen es estricta (> 100), no aplica.",
+      "items": [
+        { "productId": 6, "name": "Teclado", "unitPrice": 100.00, "quantity": 1, "category": "Papelería" }
+      ],
+      "coupon": null,
+      "expected": {
+        "originalTotal": 100.00,
+        "lines": { "CATEGORY": 0.00, "VOLUME": 0.00, "COUPON": 0.00 },
+        "totalDiscount": 0.00,
+        "effectiveRate": 0.0000,
+        "finalTotal": 100.00,
+        "capReached": false
+      }
+    },
+    {
+      "name": "umbral-volumen-apenas-superado-100.01",
+      "description": "Total corriente 100.01: la regla de volumen sí aplica.",
+      "items": [
+        { "productId": 7, "name": "Organizador", "unitPrice": 100.01, "quantity": 1, "category": "Papelería" }
+      ],
+      "coupon": null,
+      "expected": {
+        "originalTotal": 100.01,
+        "lines": { "CATEGORY": 0.00, "VOLUME": 5.00, "COUPON": 0.00 },
+        "totalDiscount": 5.00,
+        "effectiveRate": 0.0500,
+        "finalTotal": 95.01,
+        "capReached": false
+      }
+    },
+    {
+      "name": "cupon-inexistente-se-ignora",
+      "description": "Código de cupón no registrado: d3 = 0, el resto de la cascada aplica normal.",
+      "items": [
+        { "productId": 1, "name": "Laptop", "unitPrice": 800.00, "quantity": 1, "category": "Tecnología" }
+      ],
+      "coupon": "NOEXISTE",
+      "expected": {
+        "originalTotal": 800.00,
+        "lines": { "CATEGORY": 80.00, "VOLUME": 36.00, "COUPON": 0.00 },
+        "totalDiscount": 116.00,
+        "effectiveRate": 0.1450,
+        "finalTotal": 684.00,
+        "capReached": false
+      }
+    },
+    {
+      "name": "cupon-inactivo-se-ignora",
+      "description": "Cupón registrado pero inactivo/expirado: d3 = 0.",
+      "items": [
+        { "productId": 2, "name": "Mouse inalámbrico", "unitPrice": 25.00, "quantity": 2, "category": "Tecnología" }
+      ],
+      "coupon": "EXPIRED2020",
+      "expected": {
+        "originalTotal": 50.00,
+        "lines": { "CATEGORY": 5.00, "VOLUME": 0.00, "COUPON": 0.00 },
+        "totalDiscount": 5.00,
+        "effectiveRate": 0.1000,
+        "finalTotal": 45.00,
+        "capReached": false
+      }
+    },
+    {
+      "name": "tope-35-alcanzado-con-cupon-de-prueba",
+      "description": "Cupón de prueba MEGADESCUENTO (50%). La cascada da 57,25% -> se trunca en 35%. 'lines' muestra el descuento crudo por regla; 'totalDiscount'/'finalTotal' ya truncados.",
+      "items": [
+        { "productId": 8, "name": "Smartphone", "unitPrice": 500.00, "quantity": 1, "category": "Tecnología" }
+      ],
+      "coupon": "MEGADESCUENTO",
+      "expected": {
+        "originalTotal": 500.00,
+        "lines": { "CATEGORY": 50.00, "VOLUME": 22.50, "COUPON": 213.75 },
+        "totalDiscount": 175.00,
+        "effectiveRate": 0.3500,
+        "finalTotal": 325.00,
+        "capReached": true
+      }
+    }
+  ]
+}

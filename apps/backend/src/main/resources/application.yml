@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: ecommerce-backend
+
+  # En `bootRun`, spring-boot-docker-compose levanta este compose.yaml (PostgreSQL 16)
+  # y conecta el datasource automáticamente. En producción se apunta a la BD real por env.
+  docker:
+    compose:
+      enabled: true
+      file: compose.yaml
+      lifecycle-management: start-and-stop
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ecommerce
+    username: ecommerce
+    password: ecommerce
+
+  jpa:
+    hibernate:
+      # El esquema lo gobierna Flyway; Hibernate solo valida que las entidades cuadren.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate.format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# ---------------------------------------------------------------------------
+# Parámetros del motor de descuentos acumulativos (reglas de negocio del enunciado).
+# Se externalizan para poder (a) ajustar precedencias/porcentajes sin recompilar y
+# (b) registrar un cupón de prueba que fuerce el truncamiento del 35% en la demo.
+# ---------------------------------------------------------------------------
+discount:
+  category:
+    name: "Tecnología"
+    percent: 0.10
+  volume:
+    threshold: 100.00
+    percent: 0.05
+  cap:
+    percent: 0.35
+  coupons:
+    - code: "WELCOME2026"
+      percent: 0.15
+      active: true
+    # Cupón de prueba: el catálogo real (10% -> 5% -> 15% en cascada) nunca supera ~27,3%,
+    # así que el tope del 35% es inalcanzable con WELCOME2026. Este cupón permite
+    # ejercitar y demostrar el truncamiento (ver docs/arquitectura.md §3.1).
+    - code: "MEGADESCUENTO"
+      percent: 0.50
+      active: true

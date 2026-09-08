@@ -25,10 +25,12 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('renders the Davitienda topbar', async () => {
+  it('renders the header logo and the footer', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.brand')?.textContent).toContain('Davi');
+
+    expect(compiled.querySelector('.topbar img')?.getAttribute('alt')).toBe('Davitienda');
+    expect(compiled.querySelector('app-site-footer')?.textContent).toContain('Davitienda');
   });
 });

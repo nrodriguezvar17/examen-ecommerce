@@ -17,8 +17,8 @@ acumulativos en cascada** con tope del 35 % → persistencia de la orden.
 |---|---|
 | Frontend | Angular 22 (standalone + signals), Vitest, ESLint |
 | Backend | Spring Boot 4.1 + Java 17, Gradle wrapper |
-| Datos | Spring Data JPA + **H2 embebida** (fichero al ejecutar, memoria en tests) |
-| Pruebas | JUnit 5 + Mockito + JaCoCo (gate 80 %) · Vitest (umbral 80 %) |
+| Datos | Spring Data JPA + **PostgreSQL 16** + **Flyway** (migraciones). `compose.yaml` al ejecutar; **Testcontainers** en tests |
+| Pruebas | JUnit 5 + Mockito + JaCoCo (gate 80 %) + Testcontainers · Vitest (umbral 80 %) |
 | CI | GitHub Actions |
 
 Justificación del stack, trade-offs, aislamiento del motor y patrones de diseño (Strategy,
@@ -41,7 +41,8 @@ docs/         # arquitectura.md · ia.md
 
 - **JDK 17** (probado con Temurin 17). No hace falta instalar Gradle: se usa el wrapper.
 - **Node.js 20.19+ / 22.12+ / 24** y npm.
-- No hace falta base de datos: H2 es embebida.
+- **Docker** en marcha (Docker Desktop). Lo necesitan tanto `bootRun` (levanta PostgreSQL)
+  como los tests de integración del backend (Testcontainers).
 
 ## Ejecutar
 
@@ -52,10 +53,14 @@ cd apps/backend
 ./gradlew bootRun
 ```
 
+`spring-boot-docker-compose` levanta `compose.yaml` (PostgreSQL 16) al arrancar y lo
+detiene al parar la app. Flyway aplica el esquema (`V1__schema.sql`) y el catálogo de la
+demo (`V2__seed_catalog.sql`).
+
 - API: `http://localhost:8080/api/...`
 - Health: `http://localhost:8080/actuator/health`
-- Consola H2: `http://localhost:8080/h2-console`
-  (JDBC URL `jdbc:h2:file:./data/ecommerce`, usuario `sa`, sin contraseña)
+- Base de datos: `postgresql://localhost:5432/ecommerce` (usuario y contraseña `ecommerce`).
+  Levantar el contenedor a mano, si se quiere: `docker compose up -d` desde `apps/backend/`.
 
 ### Frontend — http://localhost:4200
 
@@ -71,11 +76,13 @@ npm start
 
 ```bash
 cd apps/backend
-./gradlew test                       # solo pruebas
+./gradlew test                       # solo pruebas (requiere Docker en marcha)
 ./gradlew check                      # pruebas + gate de cobertura (JaCoCo, 80% en capas lógicas)
 ```
 
 Reporte HTML: `apps/backend/build/reports/jacoco/test/html/index.html`.
+Los tests unitarios del motor de descuentos son Java puro (sin BD); los de integración
+usan Testcontainers y arrancan un PostgreSQL efímero.
 
 ### Frontend
 
@@ -91,9 +98,9 @@ Reporte HTML: `apps/frontend/coverage/index.html`.
 
 | Variable | Dónde | Efecto |
 |---|---|---|
-| `SPRING_PROFILES_ACTIVE` | backend | perfil de Spring; los tests usan `src/test/resources/application.yml` (H2 en memoria) |
+| `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` | backend | apuntar a otro PostgreSQL (p. ej. el corporativo) sin tocar `application.yml` |
+| `SPRING_DOCKER_COMPOSE_ENABLED` | backend | `false` para no auto-levantar `compose.yaml` (si ya tienes PostgreSQL corriendo) |
 | `SERVER_PORT` | backend | puerto HTTP (defecto `8080`) |
-| `SPRING_DATASOURCE_URL` | backend | sobreescribe la URL de H2 (p. ej. para apuntar a otra ruta) |
 | `discount.*` | `apps/backend/src/main/resources/application.yml` | porcentajes, umbral de volumen, tope y catálogo de cupones del motor de descuentos |
 
 ## Endpoints (contrato objetivo)

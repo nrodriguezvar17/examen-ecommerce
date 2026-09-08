@@ -65,7 +65,7 @@ Mockito para los puertos de `CheckoutService`. Pendiente de la Fase 1.
 
 | Área | Origen | Nota |
 |---|---|---|
-| Scaffold (Spring Initializr, `ng new`), configs de build | IA + herramientas | revisado y ajustado a mano (JaCoCo, perfiles H2, `strict`) |
+| Scaffold (Spring Initializr, `ng new`), configs de build | IA + herramientas | revisado y ajustado a mano (JaCoCo, PostgreSQL + Flyway + Testcontainers, `strict`) |
 | Modelo de dominio y motor de descuentos (`Money`, `DiscountPipeline`, reglas, tope) | **manual (lógica crítica)** | la IA asistió con *boilerplate*; el orden de la cascada, el redondeo y la invariante del 35 % se decidieron y escribieron a mano |
 | Oráculo de casos (`discount-cases.json`) | IA (skill) + **auditoría manual** | 3 casos recalculados a mano |
 | Pruebas unitarias | IA (andamiaje) + manual (asserts y *edge cases*) | *(Fase 1–3)* |

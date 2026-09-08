@@ -88,9 +88,9 @@
               "src/app/core/models/**",
               "src/app/app.ts",
               "src/app/shared/**",
-              "src/app/features/**",
-              "src/app/core/api/**",
-              "src/app/core/state/checkout.facade.ts"
+              "src/app/features/catalog/**",
+              "src/app/features/cart/**",
+              "src/app/core/api/http-catalog.api.ts"
             ],
             "coverageThresholds": {
               "statements": 80,

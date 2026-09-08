@@ -11,11 +11,12 @@ import java.util.Objects;
  */
 public final class Money {
 
-	public static final Money ZERO = Money.of(BigDecimal.ZERO);
-
 	private static final int SCALE = 2;
 	private static final RoundingMode ROUNDING = RoundingMode.HALF_UP;
 	private static final int RATE_SCALE = 4;
+
+	/** Declared after the constants above: they must be initialised first. */
+	public static final Money ZERO = Money.of(BigDecimal.ZERO);
 
 	private final BigDecimal amount;
 

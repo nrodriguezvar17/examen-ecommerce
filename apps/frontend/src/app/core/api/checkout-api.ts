@@ -11,10 +11,7 @@ export interface QuoteRequest {
   readonly couponCode: string | null;
 }
 
-/**
- * Port for the discount quote. Implementations: `HttpCheckoutApi` (Fase 1, calls
- * `POST /api/checkout/quote`) and `MockCheckoutApi` (prototype, client-side cascade).
- */
+/** Port for the discount quote. Implementation: {@link HttpCheckoutApi} (`POST /api/checkout/quote`). */
 export abstract class CheckoutApi {
   abstract quote(request: QuoteRequest): Observable<DiscountBreakdown>;
 }

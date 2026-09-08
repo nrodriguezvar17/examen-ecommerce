@@ -39,26 +39,13 @@ management:
         include: health,info
 
 # ---------------------------------------------------------------------------
-# Parámetros del motor de descuentos acumulativos (reglas de negocio del enunciado).
-# Se externalizan para poder (a) ajustar precedencias/porcentajes sin recompilar y
-# (b) registrar un cupón de prueba que fuerce el truncamiento del 35% en la demo.
+# Afinado del motor de descuentos. La tasa de la Regla 1 vive en categories.discount_rate
+# y los cupones en la tabla coupons; aquí solo quedan el umbral/porcentaje de volumen y
+# el tope absoluto (parámetros de política, no datos de catálogo).
 # ---------------------------------------------------------------------------
 discount:
-  category:
-    name: "Tecnología"
-    percent: 0.10
   volume:
     threshold: 100.00
     percent: 0.05
   cap:
     percent: 0.35
-  coupons:
-    - code: "WELCOME2026"
-      percent: 0.15
-      active: true
-    # Cupón de prueba: el catálogo real (10% -> 5% -> 15% en cascada) nunca supera ~27,3%,
-    # así que el tope del 35% es inalcanzable con WELCOME2026. Este cupón permite
-    # ejercitar y demostrar el truncamiento (ver docs/arquitectura.md §3.1).
-    - code: "MEGADESCUENTO"
-      percent: 0.50
-      active: true

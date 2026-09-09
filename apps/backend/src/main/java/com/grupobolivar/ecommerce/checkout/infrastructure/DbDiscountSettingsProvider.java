@@ -2,7 +2,7 @@ package com.grupobolivar.ecommerce.checkout.infrastructure;
 
 import com.grupobolivar.ecommerce.catalog.infrastructure.CategoryEntity;
 import com.grupobolivar.ecommerce.catalog.infrastructure.CategoryJpaRepository;
-import com.grupobolivar.ecommerce.checkout.application.DiscountSettingsProvider;
+import com.grupobolivar.ecommerce.checkout.application.port.DiscountSettingsProvider;
 import com.grupobolivar.ecommerce.checkout.domain.discount.DiscountConfig;
 import java.math.BigDecimal;
 import org.springframework.stereotype.Component;

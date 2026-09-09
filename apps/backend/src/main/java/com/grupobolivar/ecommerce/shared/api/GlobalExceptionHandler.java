@@ -1,10 +1,10 @@
 package com.grupobolivar.ecommerce.shared.api;
 
-import com.grupobolivar.ecommerce.catalog.application.ProductNotFoundException;
-import com.grupobolivar.ecommerce.checkout.application.EmptyCartException;
-import com.grupobolivar.ecommerce.checkout.application.InsufficientStockException;
-import com.grupobolivar.ecommerce.checkout.application.OrderNotFoundException;
-import com.grupobolivar.ecommerce.checkout.application.UnknownProductException;
+import com.grupobolivar.ecommerce.catalog.application.exception.ProductNotFoundException;
+import com.grupobolivar.ecommerce.checkout.application.exception.EmptyCartException;
+import com.grupobolivar.ecommerce.checkout.application.exception.InsufficientStockException;
+import com.grupobolivar.ecommerce.checkout.application.exception.OrderNotFoundException;
+import com.grupobolivar.ecommerce.checkout.application.exception.UnknownProductException;
 import com.grupobolivar.ecommerce.shared.api.dto.ErrorResponse;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;

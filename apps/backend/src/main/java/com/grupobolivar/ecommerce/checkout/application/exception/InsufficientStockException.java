@@ -1,4 +1,4 @@
-package com.grupobolivar.ecommerce.checkout.application;
+package com.grupobolivar.ecommerce.checkout.application.exception;
 
 /** Raised when a checkout line asks for more units than are in stock. Maps to HTTP 409. */
 public class InsufficientStockException extends RuntimeException {

@@ -1,4 +1,4 @@
-package com.grupobolivar.ecommerce.catalog.application;
+package com.grupobolivar.ecommerce.catalog.application.exception;
 
 /** Thrown when a product id has no match in the catalog. Maps to HTTP 404. */
 public class ProductNotFoundException extends RuntimeException {

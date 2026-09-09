@@ -174,7 +174,7 @@ examen-ecommerce/
 com.grupobolivar.ecommerce
 ├── catalog/
 │   ├── domain/                  # Product (record), ProductRepository (interfaz)   (Java puro)
-│   ├── application/             # CatalogService
+│   ├── application/             # CatalogService  ·  exception/ → ProductNotFoundException
 │   ├── infrastructure/          # ProductEntity + detalle + vista rating, ProductJpaRepository,
 │   │                            #   ProductRepositoryAdapter (único que toca la entidad)
 │   └── api/                     # CatalogController · api/dto/ → *Response (records)
@@ -189,8 +189,10 @@ com.grupobolivar.ecommerce
 │   │   │   ├── DiscountRuleFactory     (Factory)
 │   │   │   └── DiscountContext · DiscountBreakdown · DiscountLine
 │   │   └── coupon/              # Coupon, CouponCatalog (puerto)
-│   ├── application/             # CheckoutService + puertos (ProductStockPort,
-│   │                            #   DiscountSettingsProvider) — HU3: OrderRepository
+│   ├── application/             # CheckoutService · OrderQueryService · RadicadoGenerator · OrderConfirmation
+│   │       ├── command/         #   CheckoutCommand · QuoteCommand
+│   │       ├── port/            #   ProductStockPort · DiscountSettingsProvider · ProductSnapshot
+│   │       └── exception/       #   EmptyCart · InsufficientStock · UnknownProduct · OrderNotFound
 │   ├── infrastructure/          # entidades JPA, JpaCouponCatalog, adaptadores, DiscountProperties
 │   └── api/                     # CheckoutController · OrderController · api/dto/ → *Request / *Response (records)
 └── shared/api/                  # GlobalExceptionHandler · api/dto/ErrorResponse

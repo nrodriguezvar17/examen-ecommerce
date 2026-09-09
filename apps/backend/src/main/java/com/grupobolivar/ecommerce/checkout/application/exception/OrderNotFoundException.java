@@ -1,4 +1,4 @@
-package com.grupobolivar.ecommerce.checkout.application;
+package com.grupobolivar.ecommerce.checkout.application.exception;
 
 /** Raised when no order matches the given radicado. Maps to HTTP 404. */
 public class OrderNotFoundException extends RuntimeException {

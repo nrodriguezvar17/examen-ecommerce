@@ -1,8 +1,8 @@
 package com.grupobolivar.ecommerce.checkout.infrastructure;
 
 import com.grupobolivar.ecommerce.catalog.domain.ProductRepository;
-import com.grupobolivar.ecommerce.checkout.application.ProductSnapshot;
-import com.grupobolivar.ecommerce.checkout.application.ProductStockPort;
+import com.grupobolivar.ecommerce.checkout.application.port.ProductSnapshot;
+import com.grupobolivar.ecommerce.checkout.application.port.ProductStockPort;
 import com.grupobolivar.ecommerce.checkout.domain.model.Money;
 import java.util.Optional;
 import org.springframework.stereotype.Component;

@@ -16,7 +16,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
-/** HU3 end-to-end against the real seed (Testcontainers). Rolls back so the DB stays clean. */
+/**
+ * HU3 (persistencia + stock) y HU4 (tope del 35 %) end-to-end contra el seed real
+ * (Testcontainers). Cada test hace rollback para no ensuciar la base.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
@@ -49,6 +52,38 @@ class CheckoutIntegrationTest {
 		// Mouse (id 2) starts with stock 40 in the seed.
 		mockMvc.perform(get("/api/products"))
 				.andExpect(jsonPath("$[?(@.id == 2)].stock").value(Matchers.contains(37)));
+	}
+
+	@Test
+	void capsTheDiscountAtThirtyFivePercentAndPersistsTheFlag() throws Exception {
+		// Mouse (id 2, Tecnología, 25.00) x5 = 125.00. Cascade 10% -> 5% -> 50% (MEGADESCUENTO)
+		// exceeds 35%, so AbsoluteCapPolicy truncates: final = 125.00 * 0.65 = 81.25 (HU4).
+		mockMvc.perform(post("/api/checkout/quote")
+						.contentType("application/json")
+						.content("""
+								{ "items": [ { "productId": 2, "quantity": 5 } ],
+								  "couponCode": "MEGADESCUENTO" }"""))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.capReached").value(true))
+				.andExpect(jsonPath("$.effectiveRate").value(0.35))
+				.andExpect(jsonPath("$.totalDiscount").value(43.75))
+				.andExpect(jsonPath("$.finalTotal").value(81.25));
+
+		String confirmation = mockMvc.perform(post("/api/checkout")
+						.contentType("application/json")
+						.content("""
+								{ "items": [ { "productId": 2, "quantity": 5 } ],
+								  "couponCode": "MEGADESCUENTO" }"""))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.breakdown.capReached").value(true))
+				.andReturn().getResponse().getContentAsString();
+
+		String radicado = new ObjectMapper().readTree(confirmation).get("radicado").asString();
+		mockMvc.perform(get("/api/orders/{radicado}", radicado))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.capReached").value(true))
+				.andExpect(jsonPath("$.effectiveRate").value(0.35))
+				.andExpect(jsonPath("$.finalTotal").value(81.25));
 	}
 
 	@Test

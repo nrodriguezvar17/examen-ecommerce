@@ -47,6 +47,22 @@ describe('DiscountBreakdownComponent (HU2)', () => {
     expect(text).toContain('633.89');
   });
 
+  it('explains the 35% cap when it was reached (HU4)', () => {
+    breakdown.set({
+      originalTotal: 125,
+      lines: [{ type: 'COUPON', amount: 53.44 }],
+      totalDiscount: 43.75,
+      effectiveRate: 0.35,
+      finalTotal: 81.25,
+      capReached: true,
+    });
+    const fixture = TestBed.createComponent(DiscountBreakdownComponent);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'el ahorro se limita a ese tope',
+    );
+  });
+
   it('shows a note when there are no applicable discounts', () => {
     breakdown.set({
       originalTotal: 10,

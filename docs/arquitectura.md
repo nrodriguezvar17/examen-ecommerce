@@ -200,9 +200,20 @@ Es decir, **el tope del 35 % es teóricamente inalcanzable con `WELCOME2026`** (
 regla 1 aplica solo al subtotal de la categoría, con lo que el efecto real es aún menor).
 Aun así, `AbsoluteCapPolicy` se implementa como **invariante defensiva** — protege el
 margen ante futuras reglas o cupones más agresivos — y los porcentajes viven en
-configuración. Para poder **probar y demostrar** el truncamiento se registra un cupón de
-prueba (`MEGADESCUENTO`, 50 %). El truncamiento se cubre además con un test directo de
-`AbsoluteCapPolicy` con un descuento sintético > 35 %.
+configuración (`discount.cap.percent`) o en datos (`coupons.discount_rate`).
+
+Para poder **probar y demostrar** el truncamiento se siembra un cupón de prueba en
+`db/migration/V5__seed_demo_coupon.sql`: **`MEGADESCUENTO` (50 %)**. Con 5 unidades de un
+producto de "Tecnología" (125,00) la cascada da `10 % → 5 % → 50 %` ≈ 57,25 % de descuento;
+`AbsoluteCapPolicy` lo trunca **exactamente en 35 %** → `totalDiscount = 43,75`,
+`finalTotal = 81,25`, `effectiveRate = 0,3500` y `capReached = true`, que es lo que dispara
+la **alerta persistente de HU4** en el frontend (`savings-limit-alert.component`, texto
+fijo y `role="alert"`). El flag `capReached` se persiste en la orden (`orders.cap_reached`).
+
+Cobertura del truncamiento: test directo de `AbsoluteCapPolicy` con un descuento sintético
+> 35 %; caso `tope-35-alcanzado-con-cupon-de-prueba` del oráculo compartido
+(`DiscountPipelineTest`); y `CheckoutIntegrationTest` end-to-end (`/api/checkout/quote` y
+`/api/checkout` + `/api/orders/{radicado}`).
 
 ---
 

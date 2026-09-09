@@ -65,6 +65,22 @@ describe('CheckoutFacade', () => {
     expect(facade.capReached()).toBe(false);
   });
 
+  it('exposes capReached when the quote hits the 35% cap (HU4)', async () => {
+    quote.mockReturnValue(
+      of({
+        originalTotal: 125, lines: [{ type: 'COUPON', amount: 53.44 }],
+        totalDiscount: 43.75, effectiveRate: 0.35, finalTotal: 81.25, capReached: true,
+      }),
+    );
+    const facade = TestBed.inject(CheckoutFacade);
+    TestBed.inject(CartStore).add(laptop);
+    appRef.tick();
+
+    await wait(320);
+    expect(facade.capReached()).toBe(true);
+    expect(facade.breakdown()?.finalTotal).toBe(81.25);
+  });
+
   it('flags an invalid coupon when the quote has no COUPON line', async () => {
     const facade = TestBed.inject(CheckoutFacade);
     TestBed.inject(CartStore).add(laptop);

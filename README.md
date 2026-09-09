@@ -126,10 +126,12 @@ Reporte HTML: `apps/frontend/coverage/index.html`.
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| `GET` | `/api/products` | catálogo con `id, name, unitPrice, category, stock` |
+| `GET` | `/api/products` | catálogo con `id, name, unitPrice, category, stock, imageUrl` |
+| `GET` | `/api/products/{id}` | detalle de un producto (marca, descripción, reseñas) |
 | `POST` | `/api/checkout/quote` | calcula el desglose de descuentos sin efectos colaterales |
 | `POST` | `/api/checkout` | valida stock, recalcula, decrementa stock y persiste la orden |
-| `GET` | `/api/orders/{id}` | consulta una orden persistida |
+| `GET` | `/api/orders` | lista las 20 órdenes más recientes ("Mis compras") |
+| `GET` | `/api/orders/{radicado}` | consulta una orden persistida |
 
 ## Cupones de referencia
 

@@ -9,12 +9,14 @@
     <app-star-rating [average]="product().ratingAverage" [count]="product().reviewCount" />
     <div class="foot">
       <span class="price">{{ product().unitPrice | money }}</span>
-      @if (product().stock > 0) {
+      @if (product().stock <= 0) {
+        <button type="button" class="dv-btn dv-btn--ghost" disabled>Sin stock</button>
+      } @else if (atStockLimit()) {
+        <button type="button" class="dv-btn dv-btn--ghost" disabled>Sin más stock</button>
+      } @else {
         <button type="button" class="dv-btn dv-btn--primary" (click)="add.emit(product())">
           Agregar
         </button>
-      } @else {
-        <button type="button" class="dv-btn dv-btn--ghost" disabled>Sin stock</button>
       }
     </div>
     <span class="stock dv-muted">Stock: {{ product().stock }}</span>

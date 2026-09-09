@@ -139,6 +139,18 @@ class CheckoutServiceTest {
 	}
 
 	@Test
+	void checkoutRejectsWhenStockIsDrainedBetweenTheReadAndTheDecrement() {
+		stockAvailable();
+		when(products.decrementStock(2L, 2)).thenReturn(false);
+
+		assertThatThrownBy(() -> service.checkout(new CheckoutCommand(
+				List.of(new QuoteCommand.Line(2L, 2)), null)))
+				.isInstanceOf(InsufficientStockException.class);
+
+		verify(orders, never()).save(org.mockito.ArgumentMatchers.any());
+	}
+
+	@Test
 	void checkoutRejectsAnEmptyCart() {
 		assertThatThrownBy(() -> service.checkout(new CheckoutCommand(List.of(), null)))
 				.isInstanceOf(EmptyCartException.class);

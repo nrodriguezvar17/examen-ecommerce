@@ -61,6 +61,8 @@ public class CheckoutService {
 		Optional<Coupon> coupon = activeCoupon(command.couponCode());
 		DiscountBreakdown breakdown = calculate(lines, command.couponCode());
 
+		lines.forEach(this::decrementOrFail);
+
 		Order order = new Order(
 				radicadoGenerator.next(), null, OrderStatus.COMPRADO, clock.instant(),
 				coupon.map(Coupon::code).orElse(null),
@@ -70,9 +72,19 @@ public class CheckoutService {
 				breakdown.effectiveRate(), breakdown.finalTotal(), breakdown.capReached());
 
 		Order saved = orders.save(order);
-		lines.forEach(line -> products.decrementStock(line.product().productId(), line.quantity()));
-
 		return new OrderConfirmation(saved.radicado(), saved.createdAt(), saved.status(), breakdown);
+	}
+
+	/**
+	 * Atomically discounts the stock. The guard in the SQL ({@code stock >= quantity}) makes
+	 * this the real source of truth: if it changes no row, another checkout drained the stock
+	 * between the read and here, so we reject instead of persisting an oversold order.
+	 */
+	private void decrementOrFail(ResolvedLine line) {
+		if (!products.decrementStock(line.product().productId(), line.quantity())) {
+			throw new InsufficientStockException(line.product().productId(), line.product().name(),
+					line.quantity(), line.product().stock());
+		}
 	}
 
 	private List<ResolvedLine> resolve(List<QuoteCommand.Line> items) {

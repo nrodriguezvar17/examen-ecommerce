@@ -10,6 +10,9 @@
           <div class="info">
             <span class="name">{{ line.name }}</span>
             <span class="dv-muted">{{ line.unitPrice | money }} c/u</span>
+            @if (line.quantity >= line.stock) {
+              <span class="dv-muted limit">Stock máximo: {{ line.stock }}</span>
+            }
           </div>
           <div class="qty">
             <button
@@ -24,6 +27,7 @@
             <button
               type="button"
               class="dv-btn dv-btn--ghost step"
+              [disabled]="line.quantity >= line.stock"
               (click)="cart.setQuantity(line.productId, line.quantity + 1)"
               aria-label="Agregar una unidad"
             >

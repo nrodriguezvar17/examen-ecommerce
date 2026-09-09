@@ -5,7 +5,8 @@ import { Product } from '../models/product.model';
 /**
  * Cart state. <b>Observer</b> pattern: state lives in signals and derived values (subtotal,
  * item count) are `computed`. Components react to changes with no manual subscriptions —
- * the basis of the live update in HU1.
+ * the basis of the live update in HU1. The quantity of a line is always clamped to the
+ * product stock, so the cart can never ask the backend for more than exists.
  */
 @Injectable({ providedIn: 'root' })
 export class CartStore {
@@ -20,16 +21,22 @@ export class CartStore {
   );
   readonly isEmpty = computed((): boolean => this._items().length === 0);
 
+  /** Units of a product already in the cart (0 if absent). */
+  quantityOf(productId: number): number {
+    return this._items().find((item) => item.productId === productId)?.quantity ?? 0;
+  }
+
   add(product: Product, quantity = 1): void {
-    if (quantity <= 0) {
+    if (quantity <= 0 || product.stock <= 0) {
       return;
     }
     this._items.update((items) => {
       const existing = items.find((item) => item.productId === product.id);
       if (existing) {
+        const capped = Math.min(existing.quantity + quantity, product.stock);
         return items.map((item) =>
           item.productId === product.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: capped, stock: product.stock }
             : item,
         );
       }
@@ -38,7 +45,8 @@ export class CartStore {
         name: product.displayName,
         unitPrice: product.unitPrice,
         category: product.category,
-        quantity,
+        quantity: Math.min(quantity, product.stock),
+        stock: product.stock,
       };
       return [...items, line];
     });
@@ -50,7 +58,11 @@ export class CartStore {
       return;
     }
     this._items.update((items) =>
-      items.map((item) => (item.productId === productId ? { ...item, quantity } : item)),
+      items.map((item) =>
+        item.productId === productId
+          ? { ...item, quantity: Math.min(quantity, item.stock) }
+          : item,
+      ),
     );
   }
 

@@ -43,8 +43,8 @@ Objetivos de diseño priorizados:
 ### 2.1. Por qué Angular + Spring Boot + JPA
 
 El problema combina un *motor de cálculo con reglas secuenciales, un invariante duro
-(el 35 %) y persistencia transaccional* con una *interfaz reactiva*. **Angular + Spring Boot
-+ JPA** resuelve cada una de esas piezas con herramientas de primera parte, sin depender de
+(el 35 %) y persistencia transaccional* con una *interfaz reactiva*. **Angular + Spring Boot + JPA** 
+resuelve cada una de esas piezas con herramientas de primera parte, sin depender de
 librerías de terceros para lo crítico. Es además un stack corporativo consolidado (uso
 extendido en banca y seguros), con soporte a largo plazo y ecosistema maduro de pruebas y
 observabilidad. Detalle por pieza:
@@ -517,11 +517,11 @@ sequenceDiagram
     FE->>API: POST /api/checkout/quote {items, coupon}
     API->>SVC: quote(cmd)
     SVC->>ENG: calculate(context)
-    Note over ENG: Categoría → Volumen → Cupón (cascada)<br/>luego AbsoluteCapPolicy (tope 35 %)
+    Note over ENG: Categoria, Volumen, Cupon (cascada), luego AbsoluteCapPolicy (tope 35%)
     ENG-->>SVC: DiscountBreakdown {lines, effectiveRate, finalTotal, capReached}
     SVC-->>API: breakdown
     API-->>FE: 200 {desglose}
-    FE-->>U: muestra desglose; si capReached → alerta HU4
+    FE-->>U: muestra el desglose (alerta HU4 si capReached)
 
     U->>FE: "Confirmar compra"
     FE->>API: POST /api/checkout {items, coupon}

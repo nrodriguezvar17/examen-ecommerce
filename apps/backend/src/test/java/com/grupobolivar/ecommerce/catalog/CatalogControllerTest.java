@@ -6,8 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.grupobolivar.ecommerce.catalog.api.CatalogController;
-import com.grupobolivar.ecommerce.catalog.api.ProductResponse;
 import com.grupobolivar.ecommerce.catalog.application.CatalogService;
+import com.grupobolivar.ecommerce.catalog.domain.Product;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ class CatalogControllerTest {
 
 	@Test
 	void returnsTheCatalogAsJson() throws Exception {
-		ProductResponse mouse = new ProductResponse(
+		Product mouse = new Product(
 				2, "TEC-MOU-001", "Mouse inalámbrico", "Mouse inalámbrico silencioso",
 				"Mouse óptico inalámbrico.", new BigDecimal("25.00"), "Tecnología", 40,
 				new BigDecimal("5.00"), 1);

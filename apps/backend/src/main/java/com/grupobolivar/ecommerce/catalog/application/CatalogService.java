@@ -1,7 +1,7 @@
 package com.grupobolivar.ecommerce.catalog.application;
 
-import com.grupobolivar.ecommerce.catalog.api.ProductResponse;
-import com.grupobolivar.ecommerce.catalog.infrastructure.ProductJpaRepository;
+import com.grupobolivar.ecommerce.catalog.domain.Product;
+import com.grupobolivar.ecommerce.catalog.domain.ProductRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,16 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CatalogService {
 
-	private final ProductJpaRepository products;
+	private final ProductRepository products;
 
-	public CatalogService(ProductJpaRepository products) {
+	public CatalogService(ProductRepository products) {
 		this.products = products;
 	}
 
 	@Transactional(readOnly = true)
-	public List<ProductResponse> listAvailableProducts() {
-		return products.findByActiveTrueOrderBySkuAsc().stream()
-				.map(ProductResponse::from)
-				.toList();
+	public List<Product> listAvailableProducts() {
+		return products.findAllActive();
 	}
 }

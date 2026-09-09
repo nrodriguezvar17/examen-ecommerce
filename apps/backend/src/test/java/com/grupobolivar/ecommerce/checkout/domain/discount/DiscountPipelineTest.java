@@ -2,8 +2,6 @@ package com.grupobolivar.ecommerce.checkout.domain.discount;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grupobolivar.ecommerce.checkout.domain.coupon.Coupon;
 import com.grupobolivar.ecommerce.checkout.domain.coupon.CouponCatalog;
 import com.grupobolivar.ecommerce.checkout.domain.model.Cart;
@@ -20,6 +18,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Runs the cumulative discount engine against the shared oracle
@@ -33,11 +33,11 @@ class DiscountPipelineTest {
 	@BeforeAll
 	static void loadOracle() throws IOException {
 		try (InputStream in = DiscountPipelineTest.class.getResourceAsStream("/discount-cases.json")) {
-			fixtures = new ObjectMapper().readTree(in);
+			fixtures = JsonMapper.builder().build().readTree(in);
 		}
 		JsonNode rules = fixtures.get("rules");
 		DiscountConfig config = new DiscountConfig(
-				rules.get("categoryName").asText(),
+				rules.get("categoryName").asString(),
 				rules.get("categoryPercent").decimalValue(),
 				rules.get("volumeThreshold").decimalValue(),
 				rules.get("volumePercent").decimalValue(),
@@ -48,7 +48,7 @@ class DiscountPipelineTest {
 	static Stream<Arguments> cases() {
 		List<Arguments> args = new ArrayList<>();
 		for (JsonNode testCase : fixtures.get("cases")) {
-			args.add(Arguments.of(testCase.get("name").asText(), testCase));
+			args.add(Arguments.of(testCase.get("name").asString(), testCase));
 		}
 		return args.stream();
 	}
@@ -82,13 +82,13 @@ class DiscountPipelineTest {
 		for (JsonNode item : testCase.get("items")) {
 			items.add(new CartItem(
 					item.get("productId").asLong(),
-					item.get("name").asText(),
+					item.get("name").asString(),
 					Money.of(item.get("unitPrice").decimalValue()),
 					item.get("quantity").asInt(),
-					item.get("category").asText()));
+					item.get("category").asString()));
 		}
 		JsonNode coupon = testCase.get("coupon");
-		return new DiscountContext(new Cart(items), coupon.isNull() ? null : coupon.asText());
+		return new DiscountContext(new Cart(items), coupon.isNull() ? null : coupon.asString());
 	}
 
 	private static BigDecimal amountOf(DiscountBreakdown breakdown, DiscountType type) {

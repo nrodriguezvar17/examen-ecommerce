@@ -19,7 +19,6 @@ Justificación del stack, trade-offs, aislamiento del motor y patrones de diseñ
 Factory, Chain/Pipeline, Observer, Repository): **[`docs/arquitectura.md`](docs/arquitectura.md)**.
 Gobernanza de IA (skills, agentes, bitácora de correcciones): **[`docs/ia.md`](docs/ia.md)**.
 Modelo de datos (3FN, migraciones): **[`docs/modelo-datos.md`](docs/modelo-datos.md)**.
-Guion de sustentación (20 min): **[`docs/demo.md`](docs/demo.md)**.
 
 CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) corre en cada *push* a `main` y
 en cada PR — `./gradlew check` (backend + JaCoCo) y `npm ci && lint && test && build` (frontend).
@@ -42,7 +41,7 @@ apps/
   frontend/   # SPA Angular (core · features · shared)
 packages/
   fixtures/   # discount-cases.json — oráculo de cálculo compartido por back y front
-docs/         # arquitectura.md · ia.md · modelo-datos.md · demo.md
+docs/         # arquitectura.md · ia.md · modelo-datos.md
 .claude/      # sub-agentes y skills (ver docs/ia.md)
 .github/      # workflows/ci.yml
 ```
@@ -73,11 +72,25 @@ cd apps/backend && ./gradlew bootRun
 cd apps/frontend && npm install && npm start
 ```
 
-`spring-boot-docker-compose` levanta `compose.yaml` (PostgreSQL 16) al arrancar el backend
-(`lifecycle-management: start-only` → el contenedor sigue vivo al parar la app). **Flyway**
-aplica las migraciones `V1`–`V7` (`src/main/resources/db/migration/`); el esquema queda en
-3FN y con datos de ejemplo (10 productos, reseñas, 3 cupones). El frontend hace *proxy* de
-`/api` a `:8080` (`apps/frontend/proxy.conf.json`), así que no hay que configurar URLs.
+**La base de datos no hay que crearla a mano** — ni la base, ni el usuario, ni ningún
+`.sql`. Al hacer `./gradlew bootRun`:
+
+1. **`spring-boot-docker-compose`** lee `apps/backend/compose.yaml` y **levanta un contenedor
+   PostgreSQL 16** (`ecommerce-postgres`, `localhost:5432`, base/usuario/clave
+   `ecommerce`). Con `lifecycle-management: start-only` el contenedor **sigue vivo** al
+   parar la app, para poder inspeccionarlo.
+2. Spring conecta el *datasource* solo (config por defecto en `application.yml`).
+3. **Flyway** ejecuta las migraciones `V1`–`V7` (`src/main/resources/db/migration/`) sobre
+   esa base **al iniciar**: crea las 11 tablas + la vista (esquema en 3FN) y carga los
+   datos de ejemplo (10 productos, reseñas, 3 cupones). Hibernate queda en
+   `ddl-auto: validate` (solo verifica que las entidades cuadren; no modifica el esquema).
+
+Resultado: `git clone` + `./gradlew bootRun` deja la API operativa con la base **creada,
+migrada y poblada**. Para empezar de cero otra vez: `docker compose down -v` (borra el
+volumen) → el siguiente `bootRun` recrea todo desde las migraciones.
+
+El frontend hace *proxy* de `/api` a `:8080` (`apps/frontend/proxy.conf.json`), así que no
+hay que configurar URLs.
 
 - API: `http://localhost:8080/api/...` · Health: `http://localhost:8080/actuator/health`
 - Front: `http://localhost:4200` (landing `/`, tienda `/store`, mis compras `/shopping`)
@@ -116,6 +129,24 @@ docker compose exec postgres psql -U ecommerce -d ecommerce   # cliente psql den
 
 Migraciones por separado: `./gradlew flywayInfo` · `flywayMigrate` · `flywayClean`.
 Detener la BD: `docker compose down` (`-v` para borrar también los datos).
+
+### Apuntar a un PostgreSQL existente (en vez del contenedor)
+
+Por defecto el proyecto **crea y arranca un contenedor** PostgreSQL descartable. Para usar
+en su lugar una instancia que ya tengas (PostgreSQL instalado en tu máquina, un servidor
+compartido, uno en la nube…):
+
+```bash
+export SPRING_DOCKER_COMPOSE_ENABLED=false                       # no levantes el contenedor
+export SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:5432/<base>
+export SPRING_DATASOURCE_USERNAME=<user>
+export SPRING_DATASOURCE_PASSWORD=<pass>
+cd apps/backend && ./gradlew bootRun
+```
+
+La base destino solo debe **existir y estar vacía**; **Flyway crea el esquema y los datos**
+igual que con el contenedor. Los **tests** no tocan esta base: `./gradlew check` levanta su
+propio PostgreSQL efímero con **Testcontainers** y le aplica las mismas migraciones `V1`–`V7`.
 
 ### Cupones de referencia (seed)
 

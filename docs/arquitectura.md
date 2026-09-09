@@ -1,8 +1,8 @@
 # Arquitectura — Core E-Commerce con Descuentos Acumulativos
 
-> Documento exigido por el punto **4.1** del enunciado. Responde de forma justificada:
-> por qué este stack y diseño de carpetas, qué trade-offs se asumieron, cómo se aislaron
-> las reglas matemáticas del motor de descuentos, y qué patrones de diseño se implementaron.
+> Justificación de la arquitectura: por qué este stack y diseño de carpetas, qué trade-offs
+> se asumieron, cómo se aislaron las reglas matemáticas del motor de descuentos de la
+> persistencia y el transporte, y qué patrones de diseño se aplicaron.
 
 ---
 
@@ -22,7 +22,7 @@ Objetivos de diseño priorizados:
 | 2 | Que las reglas estén **aisladas** de la persistencia y del transporte | Hexagonal-lite: dominio sin frameworks, puertos e infraestructura afuera |
 | 3 | Que el catálogo de reglas sea **extensible** sin tocar el motor | Strategy + Factory + Pipeline |
 | 4 | Que el frontend sea **reactivo** (subtotal en vivo, alerta del 35 %) | Store con signals (Observer) + Facade |
-| 5 | **Realismo de entorno corporativo** (la prueba se evalúa por repo + sustentación) | Misma base de datos (PostgreSQL) en dev, test y producción; esquema con Flyway |
+| 5 | **Realismo de entorno corporativo** | Misma base de datos (PostgreSQL) en dev, test y producción; esquema con Flyway |
 
 ---
 
@@ -42,62 +42,106 @@ Objetivos de diseño priorizados:
 
 ### 2.1. Por qué Angular + Spring Boot + JPA
 
-El enunciado permite elegir el stack libremente (4.1). Se eligió **Angular + Spring Boot +
-JPA** porque es el estándar tecnológico del **Grupo Bolívar** (Seguros Bolívar, Davivienda):
-elegir la herramienta que el equipo domina reduce el riesgo de entrega en un ejercicio con
-tiempo acotado y permite una **defensa técnica sólida** en la sustentación. Más allá de la
-familiaridad, cada pieza aporta algo concreto al problema:
+El problema combina un *motor de cálculo con reglas secuenciales, un invariante duro
+(el 35 %) y persistencia transaccional* con una *interfaz reactiva*. **Angular + Spring Boot + JPA** 
+resuelve cada una de esas piezas con herramientas de primera parte, sin depender de
+librerías de terceros para lo crítico. Es además un stack corporativo consolidado (uso
+extendido en banca y seguros), con soporte a largo plazo y ecosistema maduro de pruebas y
+observabilidad. Detalle por pieza:
 
-- **Java (tipado nominal fuerte)** cubre el requisito 4.2 («tipado estricto de extremo a
-  extremo, sin `any`») sin esfuerzo: el lenguaje no tiene un equivalente a `any`. Los DTOs
-  de la API se modelan con `record` y validación declarativa (Bean Validation).
-- **Spring Boot** impone una separación de responsabilidades natural
-  (`Controller → Service → Repository`) y su **inyección de dependencias** hace que los
-  patrones *Strategy* y *Factory* del motor de descuentos sean idiomáticos, no forzados.
-- **Spring Data JPA + Flyway** resuelven la persistencia de la orden (HU3): repositorio
-  declarativo, `@Transactional` para que *validar stock → descontar stock → persistir* sea
-  atómico, y el esquema versionado en migraciones (`db/migration`) — la forma correcta en
-  un entorno bancario, no `ddl-auto`. El decremento de stock se hace con un **UPDATE
-  condicional atómico** (`... SET stock = stock - :qty WHERE id = :id AND stock >= :qty`),
-  que también es el control de concurrencia (ver [§4.1](#41-concurrencia-en-hu3)).
-- **Angular** trae `strict` + `strictTemplates` y, sobre todo, **signals**: el subtotal en
-  vivo (HU1) y la alerta reactiva del 35 % (HU4) se expresan como estado derivado
-  (`computed`) sin *callbacks* manuales. El tooling de test y cobertura viene integrado.
+#### Java + Spring Boot (backend)
+
+- **Exactitud decimal sin dependencias.** `BigDecimal` está en la *stdlib* con
+  `RoundingMode` explícito → la cascada `T0 → −d1 → −d2 → −d3` y el truncamiento al 35 % se
+  calculan con precisión controlada (escala 2, `HALF_UP`). El requisito de HU3 "totales
+  desglosados **exactos**" es un problema de aritmética decimal, no de rendimiento; ningún
+  lenguaje dinámico ofrece esto de fábrica (en JS haría falta `decimal.js`).
+- **Tipos inmutables para los *value objects*.** `Money`, `DiscountBreakdown`,
+  `DiscountLine` son `record`: no pueden mutar por accidente a mitad de la cascada. El
+  tipado nominal fuerte de Java hace innecesario un equivalente a `any`.
+- **Los patrones no son "forzados", son cómo se ensambla un bean.** La DI de Spring hace
+  que *Strategy* (`DiscountRule`), *Factory* (`DiscountRuleFactory` → `DiscountPipeline`
+  inyectable) y *Chain* sean el modo idiomático de construir el motor, no andamiaje extra.
+- **Atomicidad de HU3 declarativa.** `@Transactional` sobre `checkout()` hace que
+  *validar stock → recalcular → decrementar → persistir* sea todo-o-nada, con *rollback*
+  automático ante `InsufficientStockException`. Es una anotación, no manejo manual de
+  conexión/commit.
+- **Rechazo de entradas corruptas en el borde.** Bean Validation (`@NotEmpty`,
+  `@Positive`) en los DTOs de *request* → un carrito vacío o con datos corruptos se
+  responde con `400` de forma declarativa, antes de llegar al dominio.
+- **Ecosistema de pruebas maduro.** JUnit 5 `@ParameterizedTest` + `@MethodSource` consume
+  la tabla del oráculo; *slices* `@WebMvcTest` / `@DataJpaTest` aíslan capas; **JaCoCo**
+  aporta el *gate* de cobertura (`LINE` + `BRANCH`) como parte del build. Todo estándar,
+  sin montar infraestructura de test.
+
+#### Spring Data JPA + Flyway (persistencia)
+
+- **El dominio queda 100 % libre de SQL.** El repositorio declarativo se implementa con
+  casi cero código en el adaptador de infraestructura → los puertos del dominio
+  (`OrderRepository`, `ProductRepository`) devuelven tipos de dominio, no filas.
+- **Esquema versionado, auditable y reproducible.** Flyway (`V1`–`V7`) es la forma correcta
+  en banca: cada cambio de esquema es un archivo revisable, sin `ddl-auto` "mágico".
+  **Testcontainers corre las mismas migraciones** → lo que se prueba es el esquema real.
+- **Control de concurrencia sin bloqueos pesimistas.** El decremento de stock es un
+  `UPDATE ... SET stock = stock - :qty WHERE id = :id AND stock >= :qty`: la BD serializa
+  los `UPDATE` sobre la fila y resuelve la carrera por "la última unidad" (ver
+  [§4.1](#41-concurrencia-en-hu3)).
+
+#### Angular (frontend)
+
+- **El subtotal en vivo y la alerta del 35 % son estado *derivado*, no eventos.** Con
+  **signals** + `computed`, el subtotal (HU1) y la visibilidad de la alerta (HU4) se
+  declaran como fórmulas sobre el estado del carrito; no hay `subscribe`/`unsubscribe`
+  manual ni fugas. `CartStore` es un *Observer* idiomático.
+- **El tipado estricto llega al HTML.** `strictTemplates` hace que un *binding* a una
+  propiedad inexistente **no compile** → el tipado de extremo a extremo cubre también la
+  capa de vista, no solo el `.ts`.
+- **Coordinar el *quote* de HU2 es una tubería, no un `setTimeout`.** RxJS
+  (`toObservable` → `debounceTime(250 ms)` → `switchMap`) expresa "cada cambio del carrito
+  dispara un `POST /checkout/quote`, con *debounce* y cancelación de la petición en vuelo"
+  de forma declarativa.
+- **Tooling integrado.** `ng test` (Vitest), `ng lint` (ESLint con
+  `@typescript-eslint/no-explicit-any` como **error**) y `ng build` — un comando por tarea,
+  umbral de cobertura en `angular.json`.
+
+#### La combinación (contratos de extremo a extremo)
+
+- **Contrato espejo revisable.** `record` de Java ↔ `interface` de TS en `core/models`: el
+  mismo contrato a ambos lados, visible en el *diff* del PR.
+- **Una sola verdad numérica.** `packages/fixtures/discount-cases.json` se deserializa
+  igual en JUnit y en Vitest → si alguien rompe la paridad cliente/servidor, fallan las
+  pruebas de ambos lados con el mismo caso.
 
 ### 2.2. Por qué PostgreSQL como base de datos
 
-El enunciado admite persistir «en memoria, SQLite o JSON», pero también deja **libre** la
-elección de stack y evalúa el **criterio de ingeniería**. La corrección es por revisión de
-repositorio + sustentación (no "clonar y ejecutar en 2 minutos"), así que se prioriza el
-**realismo de entorno corporativo** sobre la mínima fricción:
+Persistir "en memoria" o en un fichero JSON minimiza la fricción de arranque, pero a costa
+del realismo. Se prioriza el **realismo de entorno productivo**:
 
-- **PostgreSQL 16** es la base relacional estándar para servicios nuevos en el entorno del
-  Grupo Bolívar. Entregar el ejercicio contra el motor real hace que el código de
-  persistencia (tipos `numeric`, `timestamptz`, transacciones, índices) sea el que se
-  defendería en Davivienda, no una aproximación.
+- **PostgreSQL 16** es una base relacional estándar para servicios nuevos en banca y
+  seguros. Trabajar contra el motor real hace que el código de persistencia (tipos
+  `numeric`, `timestamptz`, transacciones, índices) sea el de producción, no una
+  aproximación.
 - **Una sola base de datos en dev, test y producción.** Se evita el clásico *dialect
   drift* de usar H2 en tests y otro motor en producción (comportamientos distintos en
   fechas, `numeric`, *upserts*, *locking*). Los tests de integración corren contra
   PostgreSQL real vía **Testcontainers**.
-- **Esquema versionado con Flyway** (`src/main/resources/db/migration/`, `V1`–`V4`):
+- **Esquema versionado con Flyway** (`src/main/resources/db/migration/`, `V1`–`V7`):
   `V1` esquema, `V2` vista, `V3` datos de referencia (estados, categorías, cupones),
-  `V4` catálogo + clientes de la demo. Hibernate queda en `ddl-auto: validate` (solo
-  verifica que las entidades cuadren con el esquema). Es la práctica correcta en banca;
+  `V4` catálogo + clientes de ejemplo, `V5`–`V7` cupón de prueba e imágenes. Hibernate
+  queda en `ddl-auto: validate` (solo verifica que las entidades cuadren con el esquema).
   `ddl-auto: update` no es aceptable en producción. Detalle en `docs/modelo-datos.md`.
 - **Arranque sin fricción real**: `apps/backend/compose.yaml` define el contenedor y
   `spring-boot-docker-compose` lo **levanta** en `./gradlew bootRun` (`lifecycle-management:
-  start-only` → sigue vivo para inspeccionarlo). Único prerrequisito nuevo: Docker
-  (herramienta corporativa estándar).
-- **En la sustentación** se puede mostrar la persistencia con `psql` o cualquier cliente
-  contra `localhost:5432`, y el `flyway_schema_history` como evidencia del control de
-  esquema.
+  start-only` → sigue vivo para inspeccionarlo). Único prerrequisito nuevo: Docker.
+- La persistencia se puede inspeccionar con `psql` o cualquier cliente contra
+  `localhost:5432`, y el `flyway_schema_history` deja traza del control de esquema.
 
 El dominio y los repositorios siguen sin conocer el motor concreto (JPA + puertos): si
 mañana el estándar fuese Oracle, el cambio se limita al driver y a `application.yml`.
 
 ### 2.3. Diseño de carpetas — monorepo
 
-Estructura exacta pedida por el enunciado (punto 3):
+Estructura del monorepo:
 
 ```
 examen-ecommerce/
@@ -191,7 +235,7 @@ src/app/
 
 ### 3.1. Observación de ingeniería sobre el tope del 35 %
 
-Con el catálogo de reglas del enunciado, el descuento **máximo alcanzable** es:
+Con el catálogo de reglas por defecto, el descuento **máximo alcanzable** es:
 
 ```
 cascada:  1 − (1 − 0.10)·(1 − 0.05)·(1 − 0.15) = 1 − 0.90·0.95·0.85 ≈ 0.27325  → 27,33 %
@@ -257,7 +301,7 @@ los adaptadores (`ProductRepositoryAdapter`, `@DataJpaTest`) tocan PostgreSQL.
 
 ### 4.1. Concurrencia en HU3
 
-Escenario clásico de sustentación: *dos compras simultáneas por la última unidad*. El
+Escenario: *dos compras simultáneas por la última unidad*. El
 `checkout()` es `@Transactional` y ordena las operaciones como **resolver carrito → validar
 stock (lectura) → recalcular cascada → decrementar stock → persistir orden**. La lectura de
 validación por sí sola sufre una condición de carrera (*check-then-act*): ambas
@@ -338,8 +382,8 @@ Cada agregado se accede a través de una **interfaz que define el dominio** y qu
 
 - **Aislamiento** — la entidad `ProductEntity` (con su detalle 1:1 y la vista de rating)
   queda encerrada en `ProductRepositoryAdapter`. `CatalogService`, el DTO `ProductResponse`
-  y hasta el módulo `checkout` trabajan con el record `Product`. Responde directamente al
-  punto 4.1 del enunciado.
+  y hasta el módulo `checkout` trabajan con el record `Product` — el dominio nunca ve una
+  entidad JPA.
 - **Tests rápidos** — `CatalogServiceTest` es unitario con un `ProductRepository` mockeado;
   Testcontainers solo se usa donde de verdad se prueba SQL (`ProductRepositoryAdapterTest`,
   `@DataJpaTest`).
@@ -377,7 +421,7 @@ lecturas triviales es algo de ceremonia, pero la coherencia entre features lo co
   | `POST` | `/api/checkout/quote` | ninguno (no toca stock ni BD) | HU2, HU4 |
   | `POST` | `/api/checkout` | valida stock → recalcula → descuenta stock → persiste (`@Transactional`) | HU3 |
   | `GET` | `/api/orders` | — | lista "Mis compras" (20 más recientes) |
-  | `GET` | `/api/orders/{radicado}` | — | demo de persistencia |
+  | `GET` | `/api/orders/{radicado}` | — | detalle de una orden persistida |
 
 - **Errores** vía `GlobalExceptionHandler`: `400` cuerpo inválido o carrito vacío ·
   `404` producto u orden inexistente · `409` stock insuficiente. Un **cupón inválido o
@@ -406,14 +450,22 @@ lecturas triviales es algo de ceremonia, pero la coherencia entre features lo co
     `@WebMvcTest` para el controlador; `@SpringBootTest` para el flujo de checkout completo.
   - El gate `jacocoTestCoverageVerification` falla el build si `LINE` o `BRANCH` < 0.80 en
     los paquetes `checkout.domain` / `checkout.application` (y equivalentes de catalog).
-- **Frontend** (Vitest): `cart.store` (alta/baja/cantidad, subtotal, carrito corrupto);
-  `checkout.facade` (*quote* con debounce, mapeo, errores 4xx/5xx); componente de desglose;
-  componente de alerta del 35 % (visible solo si `capReached`, texto exacto,
-  `role="alert"`). Umbrales de cobertura al 80 % configurados en `angular.json`.
+- **Frontend** (Vitest): `cart.store` (alta/baja/cantidad, subtotal, tope de stock, carrito
+  corrupto); `catalog.store`; `checkout.facade` (*quote* con debounce, mapeo, errores
+  4xx/5xx, `capReached`, `confirm`); servicios de datos; `discount-breakdown` y
+  `savings-limit-alert` (visible solo si `capReached`, texto exacto, `role="alert"`); y los
+  componentes de `catalog` / `cart` / `orders` / `landing` (render, interacción, estados).
+  Umbrales de cobertura al 80 % (statements / branches / functions / lines) en `angular.json`.
+- **Qué se excluye de la cobertura y por qué:** solo `core/models/**` (interfaces sin
+  lógica ejecutable) y `app.ts` (bootstrap de Angular). Todo lo demás — *stores*, *facade*,
+  servicios y componentes — se mide. El gate real y su regla ("nunca bajar el umbral") lo
+  refuerza el sub-agente `auditor-cobertura` (ver [`ia.md`](ia.md) §2.1).
 - **Edge cases obligatorios:** tope del 35 % superado · carrito vacío o con datos
-  corruptos · cupón no registrado o expirado · compra sin stock suficiente.
+  corruptos · cupón no registrado o expirado · compra sin stock suficiente (incluida la
+  variante de carrera concurrente, ver §4.1).
 
-Comandos: ver [`README.md`](../README.md).
+Comandos: ver [`README.md`](../README.md). En CI los corre
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) en cada *push* y PR.
 
 ---
 
@@ -465,11 +517,11 @@ sequenceDiagram
     FE->>API: POST /api/checkout/quote {items, coupon}
     API->>SVC: quote(cmd)
     SVC->>ENG: calculate(context)
-    Note over ENG: Categoría → Volumen → Cupón (cascada)<br/>luego AbsoluteCapPolicy (tope 35 %)
+    Note over ENG: Categoria, Volumen, Cupon (cascada), luego AbsoluteCapPolicy (tope 35%)
     ENG-->>SVC: DiscountBreakdown {lines, effectiveRate, finalTotal, capReached}
     SVC-->>API: breakdown
     API-->>FE: 200 {desglose}
-    FE-->>U: muestra desglose; si capReached → alerta HU4
+    FE-->>U: muestra el desglose (alerta HU4 si capReached)
 
     U->>FE: "Confirmar compra"
     FE->>API: POST /api/checkout {items, coupon}
@@ -494,17 +546,71 @@ sequenceDiagram
 
 ## 9. Cómo ejecutar
 
-Instrucciones completas de instalación, variables de entorno y comandos de pruebas en
-[`README.md`](../README.md). En resumen:
+Instrucciones completas (variables de entorno, conexión a la base, edge cases) en
+[`README.md`](../README.md). Resumen para una instalación desde cero.
+
+### Prerrequisitos
+
+- **JDK 17**, **Node.js 22.22.3+** y npm.
+- **Docker** en marcha. Es el único servicio externo: no hay que instalar ni PostgreSQL ni
+  Gradle (se usa el *wrapper*).
+
+### La base de datos: nada que crear a mano
+
+No hay que crear la base, ni el usuario, ni ejecutar ningún `.sql`. Al arrancar el backend:
 
 ```bash
-# Backend  → http://localhost:8080  (spring-boot-docker-compose levanta PostgreSQL solo)
+cd apps/backend && ./gradlew bootRun          # → http://localhost:8080
+```
+
+1. **`spring-boot-docker-compose`** lee `apps/backend/compose.yaml` y **levanta un contenedor
+   PostgreSQL 16** (`ecommerce-postgres`) en `localhost:5432`, con base `ecommerce` y
+   usuario/clave `ecommerce` / `ecommerce`. Con `lifecycle-management: start-only` el
+   contenedor **sigue vivo** al parar la app (para poder inspeccionarlo).
+2. Spring conecta el *datasource* automáticamente (config por defecto en `application.yml`).
+3. **Flyway** ejecuta las migraciones `V1`–`V7` de `src/main/resources/db/migration/` sobre
+   esa base **al iniciar**: crea las 11 tablas + la vista y carga los datos de referencia y
+   el catálogo de ejemplo. Hibernate queda en `ddl-auto: validate` (solo comprueba que las
+   entidades cuadren con el esquema; no lo modifica).
+
+Resultado: `git clone` + `./gradlew bootRun` deja la API operativa con la base creada,
+migrada y poblada. Para inspeccionarla:
+
+```bash
+cd apps/backend
+docker compose exec postgres psql -U ecommerce -d ecommerce   # o un cliente externo a localhost:5432
+```
+
+Para empezar de cero otra vez: `docker compose down -v` (borra el volumen) → el siguiente
+`bootRun` recrea todo desde las migraciones.
+
+### Apuntar a un PostgreSQL existente (en vez del contenedor)
+
+Por defecto se crea y arranca un contenedor PostgreSQL descartable. Para usar en su lugar
+una instancia ya existente (local, compartida o en la nube):
+
+```bash
+export SPRING_DOCKER_COMPOSE_ENABLED=false                       # no levantes el contenedor
+export SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:5432/<base>
+export SPRING_DATASOURCE_USERNAME=<user>
+export SPRING_DATASOURCE_PASSWORD=<pass>
 cd apps/backend && ./gradlew bootRun
+```
 
-# Frontend → http://localhost:4200
-cd apps/frontend && npm install && npm start
+La base de datos destino debe existir y estar vacía; **Flyway crea el esquema y los datos**
+igual que en el caso anterior.
 
-# Pruebas + cobertura  (el backend necesita Docker en marcha para los tests de integración)
-cd apps/backend  && ./gradlew check          # tests + gate JaCoCo 80%
-cd apps/frontend && npm test                 # = ng test (runner Vitest, builder @angular/build:unit-test) + cobertura 80%
+### Frontend
+
+```bash
+cd apps/frontend && npm install && npm start   # → http://localhost:4200 (proxy /api → :8080)
+```
+
+### Pruebas + cobertura
+
+```bash
+cd apps/backend  && ./gradlew check   # tests + gate JaCoCo 80%. Necesita Docker: los tests de
+                                      # integración levantan su propio PostgreSQL efímero con
+                                      # Testcontainers y corren las mismas migraciones V1–V7.
+cd apps/frontend && npm test          # ng test (runner Vitest) + cobertura, umbral 80%
 ```

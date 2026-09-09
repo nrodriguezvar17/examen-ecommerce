@@ -1,5 +1,7 @@
 package com.grupobolivar.ecommerce.catalog.api;
 
+import com.grupobolivar.ecommerce.catalog.api.dto.ProductDetailResponse;
+import com.grupobolivar.ecommerce.catalog.api.dto.ProductResponse;
 import com.grupobolivar.ecommerce.catalog.application.CatalogService;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,5 +1,6 @@
 package com.grupobolivar.ecommerce.checkout.api;
 
+import com.grupobolivar.ecommerce.checkout.api.dto.OrderResponse;
 import com.grupobolivar.ecommerce.checkout.application.OrderQueryService;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;

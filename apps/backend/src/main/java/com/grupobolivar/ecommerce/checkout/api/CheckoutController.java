@@ -1,5 +1,10 @@
 package com.grupobolivar.ecommerce.checkout.api;
 
+import com.grupobolivar.ecommerce.checkout.api.dto.CartItemRequest;
+import com.grupobolivar.ecommerce.checkout.api.dto.CheckoutRequest;
+import com.grupobolivar.ecommerce.checkout.api.dto.OrderConfirmationResponse;
+import com.grupobolivar.ecommerce.checkout.api.dto.QuoteRequest;
+import com.grupobolivar.ecommerce.checkout.api.dto.QuoteResponse;
 import com.grupobolivar.ecommerce.checkout.application.CheckoutCommand;
 import com.grupobolivar.ecommerce.checkout.application.CheckoutService;
 import com.grupobolivar.ecommerce.checkout.application.QuoteCommand;

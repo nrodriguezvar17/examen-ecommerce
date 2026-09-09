@@ -177,7 +177,7 @@ com.grupobolivar.ecommerce
 │   ├── application/             # CatalogService
 │   ├── infrastructure/          # ProductEntity + detalle + vista rating, ProductJpaRepository,
 │   │                            #   ProductRepositoryAdapter (único que toca la entidad)
-│   └── api/                     # CatalogController, ProductResponse (record)
+│   └── api/                     # CatalogController · api/dto/ → *Response (records)
 ├── checkout/
 │   ├── domain/
 │   │   ├── model/               # Money, CartItem, Cart               (Java puro)
@@ -192,8 +192,8 @@ com.grupobolivar.ecommerce
 │   ├── application/             # CheckoutService + puertos (ProductStockPort,
 │   │                            #   DiscountSettingsProvider) — HU3: OrderRepository
 │   ├── infrastructure/          # entidades JPA, JpaCouponCatalog, adaptadores, DiscountProperties
-│   └── api/                     # CheckoutController, DTOs (record)
-└── shared/api/                  # GlobalExceptionHandler, ErrorResponse
+│   └── api/                     # CheckoutController · OrderController · api/dto/ → *Request / *Response (records)
+└── shared/api/                  # GlobalExceptionHandler · api/dto/ErrorResponse
 ```
 
 Se agrupa **por feature** (catalog / checkout) y dentro de cada feature por **capa**

@@ -1,4 +1,4 @@
-package com.grupobolivar.ecommerce.checkout.api;
+package com.grupobolivar.ecommerce.checkout.api.dto;
 
 import com.grupobolivar.ecommerce.checkout.domain.discount.DiscountBreakdown;
 import java.math.BigDecimal;

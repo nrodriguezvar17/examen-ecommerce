@@ -1,4 +1,4 @@
-package com.grupobolivar.ecommerce.catalog.api;
+package com.grupobolivar.ecommerce.catalog.api.dto;
 
 import com.grupobolivar.ecommerce.catalog.domain.Product;
 import java.math.BigDecimal;

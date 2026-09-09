@@ -5,6 +5,7 @@ import com.grupobolivar.ecommerce.checkout.application.EmptyCartException;
 import com.grupobolivar.ecommerce.checkout.application.InsufficientStockException;
 import com.grupobolivar.ecommerce.checkout.application.OrderNotFoundException;
 import com.grupobolivar.ecommerce.checkout.application.UnknownProductException;
+import com.grupobolivar.ecommerce.shared.api.dto.ErrorResponse;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;

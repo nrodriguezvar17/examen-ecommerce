@@ -1,4 +1,4 @@
-package com.grupobolivar.ecommerce.shared.api;
+package com.grupobolivar.ecommerce.shared.api.dto;
 
 import java.time.Instant;
 

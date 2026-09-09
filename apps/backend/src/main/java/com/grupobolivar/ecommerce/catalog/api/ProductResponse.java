@@ -1,6 +1,6 @@
 package com.grupobolivar.ecommerce.catalog.api;
 
-import com.grupobolivar.ecommerce.catalog.infrastructure.ProductEntity;
+import com.grupobolivar.ecommerce.catalog.domain.Product;
 import java.math.BigDecimal;
 
 /**
@@ -19,17 +19,17 @@ public record ProductResponse(
 		BigDecimal ratingAverage,
 		long reviewCount) {
 
-	public static ProductResponse from(ProductEntity entity) {
+	public static ProductResponse from(Product product) {
 		return new ProductResponse(
-				entity.getId(),
-				entity.getSku(),
-				entity.getName(),
-				entity.getDetail().getDisplayName(),
-				entity.getDetail().getDescription(),
-				entity.getUnitPrice(),
-				entity.getCategory().getName(),
-				entity.getStock(),
-				entity.getRating().getRatingAverage(),
-				entity.getRating().getReviewCount());
+				product.id(),
+				product.sku(),
+				product.name(),
+				product.displayName(),
+				product.description(),
+				product.unitPrice(),
+				product.category(),
+				product.stock(),
+				product.ratingAverage(),
+				product.reviewCount());
 	}
 }

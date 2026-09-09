@@ -1,58 +1,33 @@
 package com.grupobolivar.ecommerce.catalog;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.grupobolivar.ecommerce.TestcontainersConfiguration;
-import com.grupobolivar.ecommerce.catalog.api.ProductResponse;
-import com.grupobolivar.ecommerce.catalog.application.CatalogService;
-import com.grupobolivar.ecommerce.catalog.infrastructure.ProductJpaRepository;
-import java.util.List;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * Exercises the catalog read path (repository -> service -> ProductResponse mapping)
- * against the real PostgreSQL seed via Testcontainers.
- */
-@DataJpaTest
-@AutoConfigureTestDatabase(replace = Replace.NONE)
+/** End-to-end catalog: {@code GET /api/products} against the real seed (Testcontainers). */
+@SpringBootTest
+@AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 class CatalogIntegrationTest {
 
 	@Autowired
-	ProductJpaRepository repository;
+	MockMvc mockMvc;
 
 	@Test
-	void listsTheTenSeededProductsOrderedBySku() {
-		List<ProductResponse> products = new CatalogService(repository).listAvailableProducts();
-
-		assertThat(products).hasSize(10);
-		assertThat(products).extracting(ProductResponse::sku).isSorted();
-	}
-
-	@Test
-	void mapsDetailCategoryAndRatingForEachProduct() {
-		List<ProductResponse> products = new CatalogService(repository).listAvailableProducts();
-
-		ProductResponse laptop = products.stream()
-				.filter(p -> p.sku().equals("TEC-LAP-014"))
-				.findFirst()
-				.orElseThrow();
-
-		assertThat(laptop.displayName()).isEqualTo("Laptop Pro 14\" (Core i7, 16 GB)");
-		assertThat(laptop.category()).isEqualTo("Tecnología");
-		assertThat(laptop.ratingAverage()).isEqualByComparingTo("4.50");
-		assertThat(laptop.reviewCount()).isEqualTo(2);
-
-		ProductResponse keyboard = products.stream()
-				.filter(p -> p.sku().equals("TEC-KEY-002"))
-				.findFirst()
-				.orElseThrow();
-		assertThat(keyboard.reviewCount()).isZero();
-		assertThat(keyboard.ratingAverage()).isEqualByComparingTo("0");
+	void servesTheSeededCatalog() throws Exception {
+		mockMvc.perform(get("/api/products"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$", Matchers.hasSize(10)))
+				.andExpect(jsonPath("$[0].sku").value("DEP-BAL-005"))
+				.andExpect(jsonPath("$[?(@.sku == 'TEC-LAP-014')].ratingAverage").value(Matchers.contains(4.5)));
 	}
 }

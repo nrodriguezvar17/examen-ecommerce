@@ -19,6 +19,8 @@ public class CatalogController {
 
 	@GetMapping
 	public List<ProductResponse> list() {
-		return catalog.listAvailableProducts();
+		return catalog.listAvailableProducts().stream()
+				.map(ProductResponse::from)
+				.toList();
 	}
 }

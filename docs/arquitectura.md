@@ -126,8 +126,12 @@ examen-ecommerce/
 
 ```
 com.grupobolivar.ecommerce
-├── catalog/                     # producto, stock, seed del catálogo
-│   ├── domain/  application/  infrastructure/  api/
+├── catalog/
+│   ├── domain/                  # Product (record), ProductRepository (interfaz)   (Java puro)
+│   ├── application/             # CatalogService
+│   ├── infrastructure/          # ProductEntity + detalle + vista rating, ProductJpaRepository,
+│   │                            #   ProductRepositoryAdapter (único que toca la entidad)
+│   └── api/                     # CatalogController, ProductResponse (record)
 ├── checkout/
 │   ├── domain/
 │   │   ├── model/               # Money, CartItem, Cart               (Java puro)
@@ -139,10 +143,11 @@ com.grupobolivar.ecommerce
 │   │   │   ├── DiscountRuleFactory     (Factory)
 │   │   │   └── DiscountContext · DiscountBreakdown · DiscountLine
 │   │   └── coupon/              # Coupon, CouponCatalog (puerto)
-│   ├── application/             # CheckoutService + puertos (OrderRepository, ProductStockPort)
-│   ├── infrastructure/          # entidades JPA, adaptadores, InMemoryCouponCatalog, config
-│   └── api/                     # CheckoutController, DTOs (record), GlobalExceptionHandler
-└── shared/
+│   ├── application/             # CheckoutService + puertos (ProductStockPort,
+│   │                            #   DiscountSettingsProvider) — HU3: OrderRepository
+│   ├── infrastructure/          # entidades JPA, JpaCouponCatalog, adaptadores, DiscountProperties
+│   └── api/                     # CheckoutController, DTOs (record)
+└── shared/api/                  # GlobalExceptionHandler, ErrorResponse
 ```
 
 Se agrupa **por feature** (catalog / checkout) y dentro de cada feature por **capa**
@@ -174,6 +179,7 @@ src/app/
 | Trade-off | Decisión | Se gana | Se cede |
 |---|---|---|---|
 | Simplicidad **vs.** extensibilidad del motor | Strategy + Factory + Pipeline en vez de un método con `if`s | Cada regla se testea aislada; agregar una regla no toca las demás | Más clases y más indirección para 3 reglas |
+| Ceremonia **vs.** pureza de dominio | **Repository**: interfaz en el dominio (`ProductRepository`, `CouponCatalog`) que devuelve records, adaptador JPA en infra | La entidad no sale de un adaptador; `CatalogService` es unit-testeable sin BD; estilo único en catalog/checkout/orders | Un salto de mapeo extra (`Entity → Product → Response`) e interfaz + adaptador por agregado |
 | Exactitud **vs.** rendimiento de cálculo | `BigDecimal` (escala 2, HALF_UP) en vez de `double` | Totales exactos y reproducibles; sin deriva de coma flotante en la cascada | Aritmética algo más lenta (irrelevante a esta escala) |
 | Realismo **vs.** fricción de arranque | PostgreSQL real (compose + Testcontainers) en vez de H2 embebida | Paridad dev/test/prod, sin *dialect drift*; el código de persistencia es el "de verdad" | Requiere Docker para ejecutar y para los tests de integración |
 | Migraciones **vs.** velocidad inicial | Flyway (`ddl-auto: validate`) en vez de `ddl-auto: update` | Esquema explícito, versionado y revisable; práctica correcta en banca | Hay que mantener los scripts `V__*.sql` a la par de las entidades |
@@ -212,26 +218,35 @@ de persistencia y controladores de la API?»)*
 2. **Entrada y salida como datos planos.** El motor recibe un `DiscountContext`
    (un `Cart` de records + el código de cupón) y devuelve un `DiscountBreakdown`
    (value object inmutable). No conoce HTTP, JSON ni filas de base de datos.
-3. **Dependencias hacia afuera como puertos.** Lo único que el dominio necesita del
-   exterior — el catálogo de cupones — se expresa como la interfaz
-   `CouponCatalog`. La implementación (`InMemoryCouponCatalog`, que lee la
-   configuración) vive en `infrastructure`.
+3. **Dependencias hacia afuera como interfaces del dominio (patrón Repository).** Lo que el
+   dominio necesita del exterior se expresa como interfaces que **él** define y que
+   devuelven **tipos de dominio**, no entidades JPA:
+   - `catalog/domain/ProductRepository` → devuelve `Product` (record). Implementada por
+     `catalog/infrastructure/ProductRepositoryAdapter`, **la única clase que toca
+     `ProductEntity`**.
+   - `checkout/domain/coupon/CouponCatalog` → devuelve `Coupon`. Implementada por
+     `JpaCouponCatalog` (lee la tabla `coupons` + vigencia).
+   - `ProductStockPort` (checkout) es un adaptador fino sobre `ProductRepository` que
+     traduce `Product` → `ProductSnapshot`; así **checkout depende de un contrato de
+     dominio de `catalog`, no de su JPA**.
 4. **Orquestación separada del cálculo.** `CheckoutService` (capa `application`) coordina
-   *validar stock → invocar el motor → descontar stock → persistir* y depende de
-   interfaces (`OrderRepository`, `ProductStockPort`). El **cálculo** vive entero en
-   `DiscountPipeline`; el servicio no hace aritmética de descuentos.
-5. **Controladores delgados.** `CheckoutController` solo mapea DTO ↔ dominio y delega.
-   Sin lógica de negocio.
+   *resolver el carrito → invocar el motor → (HU3: descontar stock → persistir)* y depende
+   de esas interfaces. El **cálculo** vive entero en `DiscountPipeline`; el servicio no hace
+   aritmética de descuentos.
+5. **Controladores delgados.** `CatalogController` / `CheckoutController` solo mapean
+   dominio ↔ DTO y delegan. Sin lógica de negocio.
 
-Resultado: el motor se prueba instanciándolo con datos en memoria, sin Spring, sin base de
-datos y sin levantar el contexto — los tests del `DiscountPipeline` son unitarios puros.
+Resultado: el motor y los servicios se prueban con dobles en memoria, sin Spring y sin base
+de datos — los tests del `DiscountPipeline` y de `CatalogService` son unitarios puros; solo
+los adaptadores (`ProductRepositoryAdapter`, `@DataJpaTest`) tocan PostgreSQL.
 
 ---
 
 ## 5. Patrones de diseño implementados
 
 *(Responde a: «Describir e implementar explícitamente en el código al menos dos patrones
-de diseño.» — se implementan cuatro.)*
+de diseño.» — se implementan cinco: Strategy, Factory, Chain of Responsibility, Observer y
+Repository, más Adapter y Facade de apoyo.)*
 
 ### 5.1. Strategy — `DiscountRule` (backend)
 
@@ -266,10 +281,40 @@ expone estado derivado (`subtotal`, `itemCount`) como `computed(...)`. Los compo
 (listado, resumen, alerta del 35 %) **reaccionan** a los cambios sin suscripciones
 manuales. Es la implementación idiomática del patrón Observer en Angular.
 
+### 5.5. Repository — `ProductRepository` / `CouponCatalog` (backend)
+
+Cada agregado se accede a través de una **interfaz que define el dominio** y que devuelve
+**objetos de dominio**, nunca entidades JPA:
+
+| Interfaz (dominio) | Devuelve | Implementación (infra) |
+|---|---|---|
+| `catalog/domain/ProductRepository` | `Product` (record) | `catalog/infrastructure/ProductRepositoryAdapter` |
+| `checkout/domain/coupon/CouponCatalog` | `Coupon` | `checkout/infrastructure/JpaCouponCatalog` |
+
+**Por qué ayuda al proyecto** (decisión técnica):
+
+- **Aislamiento** — la entidad `ProductEntity` (con su detalle 1:1 y la vista de rating)
+  queda encerrada en `ProductRepositoryAdapter`. `CatalogService`, el DTO `ProductResponse`
+  y hasta el módulo `checkout` trabajan con el record `Product`. Responde directamente al
+  punto 4.1 del enunciado.
+- **Tests rápidos** — `CatalogServiceTest` es unitario con un `ProductRepository` mockeado;
+  Testcontainers solo se usa donde de verdad se prueba SQL (`ProductRepositoryAdapterTest`,
+  `@DataJpaTest`).
+- **Consistencia** — `checkout` ya usaba este estilo (puertos que devuelven dominio);
+  el refactor pone `catalog` en la misma línea y deja a HU3 (`OrderRepository.save(order)`)
+  encajando de forma natural con el agregado de dominio.
+- **Contrato estable** — cambiar el mapeo de columnas o el motor de persistencia no toca
+  ni la aplicación ni la API: solo el adaptador.
+
+*Trade-off asumido:* un salto de mapeo extra (`Entity → Product → Response`) y una interfaz
++ un adaptador por agregado. A cambio se gana pureza de dominio y velocidad de test; para
+lecturas triviales es algo de ceremonia, pero la coherencia entre features lo compensa.
+
 ### Patrones de apoyo
 
-- **Adapter** (backend): `infrastructure` adapta JPA y el catálogo a los puertos del
-  dominio (`OrderRepository`, `ProductStockPort`, `CouponCatalog`).
+- **Adapter** (backend): `ProductRepositoryAdapter`, `JpaCouponCatalog`,
+  `CatalogProductStockAdapter`, `DbDiscountSettingsProvider` adaptan JPA / config a las
+  interfaces del dominio.
 - **Facade** (frontend): `checkout.facade.ts` oculta a los componentes la coordinación
   entre el `HttpClient` y el `CartStore` (debounce del *quote*, mapeo a *view-model*,
   manejo de errores).

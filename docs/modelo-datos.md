@@ -392,7 +392,7 @@ solo hacia adelante (`sort_order` creciente), nunca desde un estado `is_final`.
 | 5 | `sku` en productos | incluido |
 | 6 | Reseñas | se siembran ejemplos; `product_rating_summary` como vista simple |
 | 7 | Categorías del seed | `Tecnología (0.10)`, `Papelería`, `Libros`, `Hogar`, `Deportes` |
-| 8 | Cupones del seed | `WELCOME2026` (activo) + `BLACKFRIDAY2025` (`active=false`, expirado) |
+| 8 | Cupones del seed | `WELCOME2026` (activo) + `BLACKFRIDAY2025` (`active=false`, expirado) + `MEGADESCUENTO` (activo, 50 %, prueba HU4) |
 | 9 | Clientes del seed | `ana` (Ana Torres), `carlos` (Carlos Ruiz) |
 | 10 | Órdenes de demo | **no** se siembran; se crean en vivo por el checkout. `PATCH .../status` para avanzar estados en la demo |
 
@@ -408,6 +408,7 @@ solo hacia adelante (`sort_order` creciente), nunca desde un estado `is_final`.
 | `V2__views.sql` | vista `product_rating_summary` |
 | `V3__seed_reference.sql` | `order_statuses` (4), `categories` (5, `Tecnología = 0.10`), `coupons` (`WELCOME2026` activo + `BLACKFRIDAY2025` expirado) |
 | `V4__seed_catalog.sql` | 10 productos + `product_details` (1:1) + 10 reseñas + 2 clientes (`ana`, `carlos`) |
+| `V5__seed_demo_coupon.sql` | cupón de prueba `MEGADESCUENTO` (50 %, activo) para demostrar el tope del 35 % (HU4) |
 
 Se aplican solas al arrancar la app (`spring-boot-starter-flyway`) o de forma
 independiente con el plugin de Gradle:

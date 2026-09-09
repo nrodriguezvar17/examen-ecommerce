@@ -13,6 +13,11 @@
       <span>Ahorro total ({{ data.effectiveRate | percent: '1.0-2' }})</span>
       <strong class="minus">−{{ data.totalDiscount | money }}</strong>
     </div>
+    @if (data.capReached) {
+      <p class="dv-muted capped">
+        La suma de las reglas supera el 35 %; el ahorro se limita a ese tope.
+      </p>
+    }
     <div class="row final">
       <span>Total a pagar</span>
       <strong>{{ data.finalTotal | money }}</strong>

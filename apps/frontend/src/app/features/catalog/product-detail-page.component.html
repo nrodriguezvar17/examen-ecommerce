@@ -52,7 +52,9 @@
         <article class="review dv-card">
           <header>
             <strong>{{ review.title || 'Reseña' }}</strong>
-            <span class="dv-muted">★ {{ review.rating }}/5 · {{ review.reviewerName }}</span>
+            <span class="dv-muted rating">
+              <app-icon name="star" class="filled" />{{ review.rating }}/5 · {{ review.reviewerName }}
+            </span>
           </header>
           @if (review.comment) {
             <p>{{ review.comment }}</p>

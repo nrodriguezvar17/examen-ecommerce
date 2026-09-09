@@ -21,7 +21,7 @@
               (click)="cart.setQuantity(line.productId, line.quantity - 1)"
               aria-label="Quitar una unidad"
             >
-              −
+              <app-icon name="minus" />
             </button>
             <span>{{ line.quantity }}</span>
             <button
@@ -31,7 +31,7 @@
               (click)="cart.setQuantity(line.productId, line.quantity + 1)"
               aria-label="Agregar una unidad"
             >
-              +
+              <app-icon name="plus" />
             </button>
           </div>
           <span class="line-total">{{ line.unitPrice * line.quantity | money }}</span>
@@ -41,7 +41,7 @@
             (click)="cart.remove(line.productId)"
             aria-label="Eliminar del carrito"
           >
-            ✕
+            <app-icon name="trash" />
           </button>
         </li>
       }
@@ -78,8 +78,13 @@
 
   @if (checkout.confirmation(); as order) {
     <div class="ok" role="status">
-      <p>✓ Compra confirmada. Radicado <strong>{{ order.radicado }}</strong>.</p>
-      <p class="dv-muted">Total pagado {{ order.breakdown.finalTotal | money }} · estado {{ order.status }}.</p>
+      <p>
+        <app-icon name="check" class="ok-icon" />
+        Compra confirmada. Radicado <strong>{{ order.radicado }}</strong>.
+      </p>
+      <p class="dv-muted">
+        Total pagado {{ order.breakdown.finalTotal | money }} · estado {{ order.status }}.
+      </p>
       <button type="button" class="dv-btn dv-btn--ghost" (click)="checkout.dismissConfirmation()">
         Entendido
       </button>

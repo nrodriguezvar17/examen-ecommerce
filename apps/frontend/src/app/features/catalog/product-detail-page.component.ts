@@ -5,6 +5,7 @@ import { catchError, map, of, switchMap } from 'rxjs';
 import { ProductDetail } from '../../core/models/product-detail.model';
 import { CatalogService } from '../../core/services/catalog.service';
 import { CartStore } from '../../core/state/cart.store';
+import { IconComponent } from '../../shared/icon/icon.component';
 import { MoneyPipe } from '../../shared/money.pipe';
 import { StarRatingComponent } from '../../shared/star-rating.component';
 
@@ -17,7 +18,7 @@ interface DetailState {
 @Component({
   selector: 'app-product-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MoneyPipe, StarRatingComponent],
+  imports: [RouterLink, MoneyPipe, StarRatingComponent, IconComponent],
   templateUrl: './product-detail-page.component.html',
   styleUrl: './product-detail-page.component.scss',
 })

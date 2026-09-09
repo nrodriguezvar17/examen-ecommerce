@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CartStore } from '../../core/state/cart.store';
 import { CheckoutFacade } from '../../core/state/checkout.facade';
+import { IconComponent } from '../../shared/icon/icon.component';
 import { MoneyPipe } from '../../shared/money.pipe';
 import { CouponFormComponent } from '../checkout/coupon-form.component';
 import { DiscountBreakdownComponent } from '../checkout/discount-breakdown.component';
@@ -9,7 +10,13 @@ import { SavingsLimitAlertComponent } from '../checkout/savings-limit-alert.comp
 @Component({
   selector: 'app-cart-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, CouponFormComponent, DiscountBreakdownComponent, SavingsLimitAlertComponent],
+  imports: [
+    MoneyPipe,
+    IconComponent,
+    CouponFormComponent,
+    DiscountBreakdownComponent,
+    SavingsLimitAlertComponent,
+  ],
   templateUrl: './cart-panel.component.html',
   styleUrl: './cart-panel.component.scss',
 })

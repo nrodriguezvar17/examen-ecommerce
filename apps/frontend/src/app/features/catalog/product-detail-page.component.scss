@@ -104,6 +104,16 @@
   font-size: 0.92rem;
 }
 
+.review .rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.review .rating app-icon {
+  color: var(--davitienda-accent);
+}
+
 .review p {
   margin: 0.3rem 0 0;
   font-size: 0.92rem;

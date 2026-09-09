@@ -43,8 +43,12 @@
 }
 
 .chev {
-  font-size: 0.7rem;
   color: var(--davitienda-text-secondary);
+  transition: transform 0.15s ease;
+}
+
+.chev.up {
+  transform: rotate(180deg);
 }
 
 .detail {

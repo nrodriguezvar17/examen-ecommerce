@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { IconComponent } from './icon/icon.component';
 
 @Component({
   selector: 'app-star-rating',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [IconComponent],
   templateUrl: './star-rating.component.html',
   styleUrl: './star-rating.component.scss',
 })

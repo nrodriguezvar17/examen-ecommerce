@@ -25,6 +25,20 @@
   margin: 0 0 0.8rem;
 }
 
+.wordmark {
+  display: inline-block;
+  padding: 0.9rem 1.4rem;
+  border-radius: var(--dv-radius);
+  background: var(--davitienda-primary);
+  line-height: 0;
+}
+
+.wordmark img {
+  height: 52px;
+  width: auto;
+  display: block;
+}
+
 .lead {
   max-width: 620px;
   margin: 0 auto 1.5rem;
@@ -63,7 +77,9 @@
 }
 
 .feature .icon {
-  font-size: 1.8rem;
+  display: inline-flex;
+  font-size: 1.9rem;
+  color: var(--davitienda-primary);
 }
 
 .feature h3 {

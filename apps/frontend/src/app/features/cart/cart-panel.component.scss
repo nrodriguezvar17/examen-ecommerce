@@ -98,8 +98,19 @@
   align-items: flex-start;
 }
 
+.ok p {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
 .ok .dv-muted {
   font-weight: 400;
+}
+
+.ok-icon {
+  flex-shrink: 0;
 }
 
 .err {

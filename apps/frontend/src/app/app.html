@@ -10,10 +10,10 @@
     class="menu-toggle"
     [attr.aria-expanded]="menuOpen()"
     aria-controls="main-nav"
-    aria-label="Abrir menú"
+    aria-label="Menú"
     (click)="toggleMenu()"
   >
-    <span aria-hidden="true">{{ menuOpen() ? '✕' : '☰' }}</span>
+    <app-icon [name]="menuOpen() ? 'close' : 'menu'" />
   </button>
 
   <nav id="main-nav" class="nav" [class.open]="menuOpen()">

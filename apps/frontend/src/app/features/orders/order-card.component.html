@@ -9,7 +9,7 @@
     </span>
     <span class="total">
       <strong>{{ order().finalTotal | money }}</strong>
-      <span class="chev" aria-hidden="true">{{ open() ? '▲' : '▼' }}</span>
+      <app-icon name="chevron" class="chev" [class.up]="open()" />
     </span>
   </button>
 

@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { IconComponent, IconName } from '../../shared/icon/icon.component';
 
 interface Feature {
-  readonly icon: string;
+  readonly icon: IconName;
   readonly title: string;
   readonly text: string;
 }
@@ -11,29 +12,29 @@ interface Feature {
 @Component({
   selector: 'app-landing-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, IconComponent],
   templateUrl: './landing-page.component.html',
   styleUrl: './landing-page.component.scss',
 })
 export class LandingPageComponent {
   protected readonly features: readonly Feature[] = [
     {
-      icon: '🛒',
+      icon: 'cart',
       title: 'Carrito en vivo',
       text: 'Agrega productos y ve el subtotal actualizarse al instante, sin recargar.',
     },
     {
-      icon: '🎯',
+      icon: 'target',
       title: 'Descuentos acumulativos',
       text: 'Categoría, volumen y cupón se aplican en cascada, con el desglose siempre a la vista.',
     },
     {
-      icon: '🛡️',
+      icon: 'shield',
       title: 'Tope de ahorro del 35 %',
       text: 'El descuento consolidado nunca supera el 35 %: la regla es explícita y se te avisa.',
     },
     {
-      icon: '📦',
+      icon: 'box',
       title: 'Checkout consistente',
       text: 'El backend valida stock, recalcula el total y guarda tu orden con un radicado único.',
     },

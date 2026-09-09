@@ -1,6 +1,8 @@
 <section class="hero">
   <p class="eyebrow">Core E-Commerce</p>
-  <h1>Davitienda</h1>
+  <h1 class="wordmark">
+    <img src="assets/logo-large.png" alt="Davitienda" />
+  </h1>
   <p class="lead">
     Una tienda con un <strong>sistema de descuentos acumulativos</strong> transparente: ves
     cómo se forma cada ahorro, con un tope claro del 35 %, y tu compra queda registrada de
@@ -17,7 +19,7 @@
   <div class="grid">
     @for (feature of features; track feature.title) {
       <article class="dv-card feature">
-        <span class="icon" aria-hidden="true">{{ feature.icon }}</span>
+        <span class="icon"><app-icon [name]="feature.icon" /></span>
         <h3>{{ feature.title }}</h3>
         <p class="dv-muted">{{ feature.text }}</p>
       </article>

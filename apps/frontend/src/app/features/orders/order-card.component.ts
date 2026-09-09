@@ -3,13 +3,14 @@ import { ChangeDetectionStrategy, Component, computed, input, signal } from '@an
 import { DiscountType } from '../../core/models/discount-breakdown.model';
 import { Order } from '../../core/models/order.model';
 import { DISCOUNT_LABELS } from '../../shared/discount-labels';
+import { IconComponent } from '../../shared/icon/icon.component';
 import { MoneyPipe } from '../../shared/money.pipe';
 
 /** One order in "Mis compras": a summary row that expands to the checkout-style breakdown. */
 @Component({
   selector: 'app-order-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, DatePipe, PercentPipe],
+  imports: [MoneyPipe, DatePipe, PercentPipe, IconComponent],
   templateUrl: './order-card.component.html',
   styleUrl: './order-card.component.scss',
 })

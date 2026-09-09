@@ -15,9 +15,10 @@ describe('LandingPageComponent', () => {
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
 
-    expect(el.querySelector('h1')?.textContent).toContain('Davitienda');
+    expect(el.querySelector('h1 img')?.getAttribute('alt')).toBe('Davitienda');
     expect(el.textContent).toContain('descuentos acumulativos');
     expect(el.querySelectorAll('.feature')).toHaveLength(4);
+    expect(el.querySelectorAll('.feature app-icon')).toHaveLength(4);
 
     const toStore = Array.from(el.querySelectorAll('a')).filter(
       (a) => a.getAttribute('href') === '/store',

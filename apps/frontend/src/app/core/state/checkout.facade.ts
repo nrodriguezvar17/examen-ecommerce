@@ -1,29 +1,38 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { debounceTime, of, switchMap, tap } from 'rxjs';
 import { DiscountBreakdown } from '../models/discount-breakdown.model';
-import { CheckoutService, QuoteRequest } from '../services/checkout.service';
 import { CartStore } from './cart.store';
+import { CatalogStore } from './catalog.store';
+import { CheckoutService, OrderConfirmation, QuoteRequest } from '../services/checkout.service';
 
 /**
  * <b>Facade</b>: the single entry point the checkout UI talks to. Hides the coordination
- * between the {@link CartStore} and the quote API — debounced recompute on every cart /
- * coupon change, mapping to a view model, coupon-error detection.
+ * between the {@link CartStore} and the checkout API — debounced quote recompute on every
+ * cart / coupon change (HU2), coupon-error detection, and order confirmation (HU3).
  */
 @Injectable({ providedIn: 'root' })
 export class CheckoutFacade {
   private readonly cart = inject(CartStore);
+  private readonly catalog = inject(CatalogStore);
   private readonly checkout = inject(CheckoutService);
 
   private readonly _coupon = signal<string | null>(null);
   private readonly _breakdown = signal<DiscountBreakdown | null>(null);
   private readonly _loading = signal(false);
   private readonly _couponError = signal<string | null>(null);
+  private readonly _confirming = signal(false);
+  private readonly _confirmation = signal<OrderConfirmation | null>(null);
+  private readonly _checkoutError = signal<string | null>(null);
 
   readonly coupon = this._coupon.asReadonly();
   readonly breakdown = this._breakdown.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly couponError = this._couponError.asReadonly();
+  readonly confirming = this._confirming.asReadonly();
+  readonly confirmation = this._confirmation.asReadonly();
+  readonly checkoutError = this._checkoutError.asReadonly();
   readonly capReached = computed((): boolean => this._breakdown()?.capReached ?? false);
 
   private readonly request = computed((): QuoteRequest | null => {
@@ -67,5 +76,42 @@ export class CheckoutFacade {
   clearCoupon(): void {
     this._coupon.set(null);
     this._couponError.set(null);
+  }
+
+  /** HU3 — confirms the order on the backend, then empties the cart and refreshes stock. */
+  confirm(): void {
+    const req = this.request();
+    if (req === null || this._confirming()) {
+      return;
+    }
+    this._confirming.set(true);
+    this._checkoutError.set(null);
+    this._confirmation.set(null);
+    this.checkout.confirm(req).subscribe({
+      next: (confirmation) => {
+        this._confirming.set(false);
+        this._confirmation.set(confirmation);
+        this._breakdown.set(null);
+        this._coupon.set(null);
+        this.cart.clear();
+        this.catalog.reload();
+      },
+      error: (error: HttpErrorResponse) => {
+        this._confirming.set(false);
+        this._checkoutError.set(this.messageFor(error));
+      },
+    });
+  }
+
+  dismissConfirmation(): void {
+    this._confirmation.set(null);
+  }
+
+  private messageFor(error: HttpErrorResponse): string {
+    const detail = (error.error as { message?: string } | null)?.message;
+    if (error.status === 409) {
+      return detail ?? 'No hay stock suficiente para completar la compra.';
+    }
+    return detail ?? 'No pudimos confirmar la compra. Intenta de nuevo.';
   }
 }

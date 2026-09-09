@@ -34,6 +34,16 @@
   font-size: 0.78rem;
 }
 
+.info .limit {
+  color: var(--davitienda-primary);
+  font-weight: 600;
+}
+
+.step:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .qty {
   display: inline-flex;
   align-items: center;
@@ -79,6 +89,21 @@
 
 .ok {
   color: var(--davitienda-success);
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.ok .dv-muted {
+  font-weight: 400;
+}
+
+.err {
+  color: var(--davitienda-primary);
   font-weight: 600;
   font-size: 0.85rem;
   margin-top: 0.6rem;

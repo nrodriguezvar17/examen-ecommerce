@@ -58,6 +58,30 @@ describe('CartStore', () => {
     expect(store.isEmpty()).toBe(true);
   });
 
+  it('no deja agregar más unidades que el stock disponible', () => {
+    store.add(laptop, 99);
+    expect(store.quantityOf(1)).toBe(5);
+    store.add(laptop, 4);
+    expect(store.quantityOf(1)).toBe(5);
+  });
+
+  it('setQuantity nunca supera el stock de la línea', () => {
+    store.add(laptop);
+    store.setQuantity(1, 99);
+    expect(store.quantityOf(1)).toBe(5);
+  });
+
+  it('no agrega un producto sin stock', () => {
+    store.add({ ...book, stock: 0 });
+    expect(store.isEmpty()).toBe(true);
+  });
+
+  it('quantityOf refleja lo que hay en el carrito', () => {
+    store.add(book, 2);
+    expect(store.quantityOf(2)).toBe(2);
+    expect(store.quantityOf(1)).toBe(0);
+  });
+
   it('remove de un id inexistente no cambia el estado', () => {
     store.add(laptop);
     store.remove(999);

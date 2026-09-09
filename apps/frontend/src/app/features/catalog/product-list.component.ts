@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Product } from '../../core/models/product.model';
-import { CatalogService } from '../../core/services/catalog.service';
 import { CartStore } from '../../core/state/cart.store';
+import { CatalogStore } from '../../core/state/catalog.store';
 import { ProductCardComponent } from './product-card.component';
 
 @Component({
@@ -14,11 +13,14 @@ import { ProductCardComponent } from './product-card.component';
 })
 export class ProductListComponent {
   private readonly cart = inject(CartStore);
+  protected readonly catalog = inject(CatalogStore);
 
-  protected readonly products = toSignal(inject(CatalogService).products(), {
-    initialValue: [] as readonly Product[],
-  });
-  protected readonly loading = computed((): boolean => this.products().length === 0);
+  protected readonly products = this.catalog.products;
+  protected readonly loading = this.catalog.loading;
+
+  constructor() {
+    this.catalog.reload();
+  }
 
   onAdd(product: Product): void {
     this.cart.add(product);

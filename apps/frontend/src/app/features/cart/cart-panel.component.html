@@ -10,6 +10,9 @@
           <div class="info">
             <span class="name">{{ line.name }}</span>
             <span class="dv-muted">{{ line.unitPrice | money }} c/u</span>
+            @if (line.quantity >= line.stock) {
+              <span class="dv-muted limit">Stock máximo: {{ line.stock }}</span>
+            }
           </div>
           <div class="qty">
             <button
@@ -24,6 +27,7 @@
             <button
               type="button"
               class="dv-btn dv-btn--ghost step"
+              [disabled]="line.quantity >= line.stock"
               (click)="cart.setQuantity(line.productId, line.quantity + 1)"
               aria-label="Agregar una unidad"
             >
@@ -55,14 +59,30 @@
     <button
       type="button"
       class="dv-btn dv-btn--primary confirm"
-      [disabled]="checkout.loading()"
+      [disabled]="checkout.loading() || checkout.confirming()"
       (click)="confirm()"
     >
-      {{ checkout.loading() ? 'Calculando…' : 'Confirmar compra' }}
+      @if (checkout.confirming()) {
+        Confirmando…
+      } @else if (checkout.loading()) {
+        Calculando…
+      } @else {
+        Confirmar compra
+      }
     </button>
 
-    @if (confirmed()) {
-      <p class="ok" role="status">✓ Compra confirmada (prototipo — el backend llega en Fase 1).</p>
+    @if (checkout.checkoutError(); as error) {
+      <p class="err" role="alert">{{ error }}</p>
     }
+  }
+
+  @if (checkout.confirmation(); as order) {
+    <div class="ok" role="status">
+      <p>✓ Compra confirmada. Radicado <strong>{{ order.radicado }}</strong>.</p>
+      <p class="dv-muted">Total pagado {{ order.breakdown.finalTotal | money }} · estado {{ order.status }}.</p>
+      <button type="button" class="dv-btn dv-btn--ghost" (click)="checkout.dismissConfirmation()">
+        Entendido
+      </button>
+    </div>
   }
 </aside>

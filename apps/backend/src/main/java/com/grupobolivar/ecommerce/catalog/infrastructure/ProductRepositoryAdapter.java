@@ -30,6 +30,11 @@ public class ProductRepositoryAdapter implements ProductRepository {
 		return products.findById(id).map(this::toDomain);
 	}
 
+	@Override
+	public boolean decrementStock(long id, int quantity) {
+		return products.decrementStock(id, quantity) == 1;
+	}
+
 	private Product toDomain(ProductEntity entity) {
 		return new Product(
 				entity.getId(),

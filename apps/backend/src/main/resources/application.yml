@@ -49,3 +49,8 @@ discount:
     percent: 0.05
   cap:
     percent: 0.35
+
+# Prefijo del radicado de la orden: <prefix>-<yyyyMMddHHmmssSSS>.
+order:
+  reference:
+    prefix: ORD

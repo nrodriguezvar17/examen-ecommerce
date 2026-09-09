@@ -15,4 +15,11 @@ public interface ProductRepository {
 	List<Product> findAllActive();
 
 	Optional<Product> findById(long id);
+
+	/**
+	 * Atomically decrements a product's stock.
+	 *
+	 * @return {@code false} if there were not enough units
+	 */
+	boolean decrementStock(long id, int quantity);
 }

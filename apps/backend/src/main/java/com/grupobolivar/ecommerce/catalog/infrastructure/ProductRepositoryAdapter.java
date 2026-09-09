@@ -36,7 +36,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
 
 	@Override
 	public Optional<ProductDetail> findDetailById(long id) {
-		return products.findById(id).map(this::toDetail);
+		return products.findWithDetailById(id).map(this::toDetail);
 	}
 
 	@Override
@@ -51,6 +51,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
 				entity.getName(),
 				entity.getDetail().getDisplayName(),
 				entity.getDetail().getDescription(),
+				entity.getImageUrl(),
 				entity.getUnitPrice(),
 				entity.getCategory().getName(),
 				entity.getStock(),
@@ -64,10 +65,6 @@ public class ProductRepositoryAdapter implements ProductRepository {
 				.map(review -> new Review(review.getId(), review.getRating(), review.getTitle(),
 						review.getComment(), review.getReviewerName(), review.getCreatedAt()))
 				.toList();
-		return new ProductDetail(
-				toDomain(entity),
-				entity.getDetail().getBrand(),
-				entity.getDetail().getImageUrl(),
-				productReviews);
+		return new ProductDetail(toDomain(entity), entity.getDetail().getBrand(), productReviews);
 	}
 }

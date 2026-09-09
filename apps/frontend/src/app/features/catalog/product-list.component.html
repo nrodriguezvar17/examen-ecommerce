@@ -5,15 +5,7 @@
   }
   <div class="grid">
     @for (product of products(); track product.id) {
-      <app-product-card
-        [product]="product"
-        (add)="onAdd($event)"
-        (details)="selectedId.set(product.id)"
-      />
+      <app-product-card [product]="product" (add)="onAdd($event)" />
     }
   </div>
 </section>
-
-@if (selectedId(); as id) {
-  <app-product-detail-dialog [productId]="id" (closed)="selectedId.set(null)" />
-}

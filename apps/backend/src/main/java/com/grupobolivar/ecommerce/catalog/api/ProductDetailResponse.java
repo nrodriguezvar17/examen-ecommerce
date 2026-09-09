@@ -30,7 +30,7 @@ public record ProductDetailResponse(
 		var product = detail.product();
 		return new ProductDetailResponse(
 				product.id(), product.sku(), product.name(), product.displayName(),
-				product.description(), detail.brand(), detail.imageUrl(), product.unitPrice(),
+				product.description(), detail.brand(), product.imageUrl(), product.unitPrice(),
 				product.category(), product.stock(), product.ratingAverage(), product.reviewCount(),
 				detail.reviews().stream().map(ProductDetailResponse::review).toList());
 	}

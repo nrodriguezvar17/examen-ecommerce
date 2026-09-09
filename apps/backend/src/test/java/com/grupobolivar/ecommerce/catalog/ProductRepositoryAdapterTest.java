@@ -72,7 +72,8 @@ class ProductRepositoryAdapterTest {
 		ProductDetail detail = repository().findDetailById(laptopId).orElseThrow();
 
 		assertThat(detail.product().id()).isEqualTo(laptopId);
-		assertThat(detail.brand()).isNotBlank();
+		assertThat(detail.product().imageUrl()).startsWith("https://picsum.photos/");
+		assertThat(detail.brand()).isEqualTo("NovaTech");
 		assertThat(detail.reviews()).hasSize(2);
 		assertThat(detail.reviews()).allSatisfy(review -> {
 			assertThat(review.rating()).isBetween(1, 5);

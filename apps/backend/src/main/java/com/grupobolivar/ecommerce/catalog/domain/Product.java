@@ -11,6 +11,7 @@ import java.math.BigDecimal;
  * @param name          canonical name
  * @param displayName   storefront name
  * @param description   storefront description
+ * @param imageUrl      storefront image URL (may be {@code null})
  * @param unitPrice     unit price
  * @param category      category name
  * @param stock         units in stock
@@ -23,6 +24,7 @@ public record Product(
 		String name,
 		String displayName,
 		String description,
+		String imageUrl,
 		BigDecimal unitPrice,
 		String category,
 		int stock,

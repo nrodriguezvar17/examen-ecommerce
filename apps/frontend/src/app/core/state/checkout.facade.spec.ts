@@ -11,7 +11,7 @@ import { CheckoutFacade } from './checkout.facade';
 
 const laptop: Product = {
   id: 1, sku: 'TEC-LAP', name: 'Laptop', displayName: 'Laptop',
-  description: '', unitPrice: 1200, category: 'Tecnología', stock: 8,
+  description: '', imageUrl: null, unitPrice: 1200, category: 'Tecnología', stock: 8,
   ratingAverage: 0, reviewCount: 0,
 };
 

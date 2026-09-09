@@ -10,9 +10,8 @@ export interface Review {
   readonly createdAt: string;
 }
 
-/** Full product view for the detail screen: catalog data + brand/image + reviews. */
+/** Full product view for the detail page: catalog data (incl. image) + brand + reviews. */
 export interface ProductDetail extends Product {
   readonly brand: string | null;
-  readonly imageUrl: string | null;
   readonly reviews: readonly Review[];
 }

@@ -36,8 +36,8 @@ class CatalogControllerTest {
 	private static Product mouse() {
 		return new Product(
 				2, "TEC-MOU-001", "Mouse inalámbrico", "Mouse inalámbrico silencioso",
-				"Mouse óptico inalámbrico.", new BigDecimal("25.00"), "Tecnología", 40,
-				new BigDecimal("5.00"), 1);
+				"Mouse óptico inalámbrico.", "https://picsum.photos/seed/mouse/600/400",
+				new BigDecimal("25.00"), "Tecnología", 40, new BigDecimal("5.00"), 1);
 	}
 
 	@Test
@@ -49,6 +49,7 @@ class CatalogControllerTest {
 				.andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(1)))
 				.andExpect(jsonPath("$[0].sku").value("TEC-MOU-001"))
 				.andExpect(jsonPath("$[0].displayName").value("Mouse inalámbrico silencioso"))
+				.andExpect(jsonPath("$[0].imageUrl").value("https://picsum.photos/seed/mouse/600/400"))
 				.andExpect(jsonPath("$[0].unitPrice").value(25.00))
 				.andExpect(jsonPath("$[0].category").value("Tecnología"))
 				.andExpect(jsonPath("$[0].stock").value(40));
@@ -57,7 +58,7 @@ class CatalogControllerTest {
 	@Test
 	void returnsTheProductDetailWithReviews() throws Exception {
 		ProductDetail detail = new ProductDetail(
-				mouse(), "LogiCorp", "https://img/mouse.png",
+				mouse(), "LogiCorp",
 				List.of(new Review(9, 5, "Silencioso", "El clic casi no se oye.", "Sofía R.",
 						Instant.parse("2026-01-10T12:00:00Z"))));
 		when(catalogService.getProductDetail(2L)).thenReturn(detail);
@@ -66,6 +67,7 @@ class CatalogControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(2))
 				.andExpect(jsonPath("$.brand").value("LogiCorp"))
+				.andExpect(jsonPath("$.imageUrl").value("https://picsum.photos/seed/mouse/600/400"))
 				.andExpect(jsonPath("$.reviews[0].reviewerName").value("Sofía R."))
 				.andExpect(jsonPath("$.reviews[0].rating").value(5));
 	}

@@ -1,0 +1,64 @@
+<section class="page">
+  <a routerLink="/" class="back">← Volver a la tienda</a>
+
+  @if (loading()) {
+    <p class="dv-muted state">Cargando el producto…</p>
+  } @else if (notFound()) {
+    <div class="dv-card state">
+      <p>No encontramos este producto.</p>
+      <a routerLink="/" class="dv-btn dv-btn--primary">Ir al catálogo</a>
+    </div>
+  } @else if (product(); as p) {
+    <article class="detail">
+      <div class="media">
+        @if (p.imageUrl) {
+          <img [src]="p.imageUrl" [alt]="p.displayName" />
+        } @else {
+          <div class="placeholder" [attr.data-cat]="p.category">{{ p.category.charAt(0) }}</div>
+        }
+      </div>
+
+      <div class="info">
+        <span class="dv-badge">{{ p.category }}</span>
+        <h1>{{ p.displayName }}</h1>
+        @if (p.brand) {
+          <p class="dv-muted brand">Marca: {{ p.brand }}</p>
+        }
+        <app-star-rating [average]="p.ratingAverage" [count]="p.reviewCount" />
+        <p class="price">{{ p.unitPrice | money }}</p>
+        <p class="description">{{ p.description }}</p>
+
+        <p class="dv-muted stock">Stock: {{ p.stock }} · en tu carrito: {{ inCart() }}</p>
+        <div class="actions">
+          <button
+            type="button"
+            class="dv-btn dv-btn--primary"
+            [disabled]="soldOut()"
+            (click)="addToCart()"
+          >
+            {{ soldOut() ? 'Sin stock disponible' : 'Agregar al carrito' }}
+          </button>
+          <a routerLink="/" class="dv-btn dv-btn--ghost">Seguir comprando</a>
+        </div>
+      </div>
+    </article>
+
+    <section class="reviews">
+      <h2>Reseñas ({{ p.reviews.length }})</h2>
+      @if (p.reviews.length === 0) {
+        <p class="dv-muted">Este producto todavía no tiene reseñas.</p>
+      }
+      @for (review of p.reviews; track review.id) {
+        <article class="review dv-card">
+          <header>
+            <strong>{{ review.title || 'Reseña' }}</strong>
+            <span class="dv-muted">★ {{ review.rating }}/5 · {{ review.reviewerName }}</span>
+          </header>
+          @if (review.comment) {
+            <p>{{ review.comment }}</p>
+          }
+        </article>
+      }
+    </section>
+  }
+</section>

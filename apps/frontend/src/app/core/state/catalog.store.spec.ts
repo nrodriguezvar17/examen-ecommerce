@@ -6,7 +6,7 @@ import { CatalogStore } from './catalog.store';
 
 const mouse: Product = {
   id: 2, sku: 'TEC-MOU', name: 'Mouse', displayName: 'Mouse inalámbrico',
-  description: '', unitPrice: 25, category: 'Tecnología', stock: 40,
+  description: '', imageUrl: null, unitPrice: 25, category: 'Tecnología', stock: 40,
   ratingAverage: 4, reviewCount: 3,
 };
 

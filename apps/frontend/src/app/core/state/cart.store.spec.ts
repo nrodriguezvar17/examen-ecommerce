@@ -4,12 +4,12 @@ import { CartStore } from './cart.store';
 
 const laptop: Product = {
   id: 1, sku: 'TEC-LAP-999', name: 'Laptop', displayName: 'Laptop',
-  description: '', unitPrice: 800, category: 'Tecnología', stock: 5,
+  description: '', imageUrl: null, unitPrice: 800, category: 'Tecnología', stock: 5,
   ratingAverage: 0, reviewCount: 0,
 };
 const book: Product = {
   id: 2, sku: 'LIB-999', name: 'Libro', displayName: 'Libro',
-  description: '', unitPrice: 30, category: 'Libros', stock: 10,
+  description: '', imageUrl: null, unitPrice: 30, category: 'Libros', stock: 10,
   ratingAverage: 0, reviewCount: 0,
 };
 

@@ -27,6 +27,9 @@ public class ProductEntity {
 	@Column(name = "unit_price", nullable = false)
 	private BigDecimal unitPrice;
 
+	@Column(name = "image_url")
+	private String imageUrl;
+
 	@Column(nullable = false)
 	private int stock;
 
@@ -62,6 +65,10 @@ public class ProductEntity {
 
 	public BigDecimal getUnitPrice() {
 		return unitPrice;
+	}
+
+	public String getImageUrl() {
+		return imageUrl;
 	}
 
 	public int getStock() {

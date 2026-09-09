@@ -174,7 +174,8 @@ examen-ecommerce/
 com.grupobolivar.ecommerce
 ├── catalog/
 │   ├── domain/                  # Product (record), ProductRepository (interfaz)   (Java puro)
-│   ├── application/             # CatalogService  ·  exception/ → ProductNotFoundException
+│   ├── application/             # CatalogService
+│   │   └── exception/           #   ProductNotFoundException
 │   ├── infrastructure/          # ProductEntity + detalle + vista rating, ProductJpaRepository,
 │   │                            #   ProductRepositoryAdapter (único que toca la entidad)
 │   └── api/                     # CatalogController · api/dto/ → *Response (records)
@@ -190,9 +191,9 @@ com.grupobolivar.ecommerce
 │   │   │   └── DiscountContext · DiscountBreakdown · DiscountLine
 │   │   └── coupon/              # Coupon, CouponCatalog (puerto)
 │   ├── application/             # CheckoutService · OrderQueryService · RadicadoGenerator · OrderConfirmation
-│   │       ├── command/         #   CheckoutCommand · QuoteCommand
-│   │       ├── port/            #   ProductStockPort · DiscountSettingsProvider · ProductSnapshot
-│   │       └── exception/       #   EmptyCart · InsufficientStock · UnknownProduct · OrderNotFound
+│   │   ├── command/             #   CheckoutCommand · QuoteCommand
+│   │   ├── port/                #   ProductStockPort · DiscountSettingsProvider · ProductSnapshot
+│   │   └── exception/           #   EmptyCartException · InsufficientStockException · UnknownProductException · OrderNotFoundException
 │   ├── infrastructure/          # entidades JPA, JpaCouponCatalog, adaptadores, DiscountProperties
 │   └── api/                     # CheckoutController · OrderController · api/dto/ → *Request / *Response (records)
 └── shared/api/                  # GlobalExceptionHandler · api/dto/ErrorResponse
@@ -285,8 +286,8 @@ de persistencia y controladores de la API?»)*
      `ProductEntity`**.
    - `checkout/domain/coupon/CouponCatalog` → devuelve `Coupon`. Implementada por
      `JpaCouponCatalog` (lee la tabla `coupons` + vigencia).
-   - `ProductStockPort` es el **puerto de salida** de `checkout` (interfaz en su capa
-     `application`). Lo **implementa** el adaptador `CatalogProductStockAdapter`
+   - `ProductStockPort` es el **puerto de salida** de `checkout` (interfaz en
+     `checkout/application/port`). Lo **implementa** el adaptador `CatalogProductStockAdapter`
      (`checkout/infrastructure`), que consume el `ProductRepository` de `catalog` y
      traduce `Product` → `ProductSnapshot`. Así **el dominio de `checkout` no se acopla ni
      a la JPA ni al dominio de `catalog`**: solo conoce su propio contrato.

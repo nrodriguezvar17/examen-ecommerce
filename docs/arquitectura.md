@@ -43,26 +43,85 @@ Objetivos de diseño priorizados:
 ### 2.1. Por qué Angular + Spring Boot + JPA
 
 El enunciado permite elegir el stack libremente (4.1). Se eligió **Angular + Spring Boot +
-JPA** porque es el estándar tecnológico del **Grupo Bolívar** (Seguros Bolívar, Davivienda):
-elegir la herramienta que el equipo domina reduce el riesgo de entrega en un ejercicio con
-tiempo acotado y permite una **defensa técnica sólida** en la sustentación. Más allá de la
-familiaridad, cada pieza aporta algo concreto al problema:
+JPA** por **dos motivos independientes**:
 
-- **Java (tipado nominal fuerte)** cubre el requisito 4.2 («tipado estricto de extremo a
-  extremo, sin `any`») sin esfuerzo: el lenguaje no tiene un equivalente a `any`. Los DTOs
-  de la API se modelan con `record` y validación declarativa (Bean Validation).
-- **Spring Boot** impone una separación de responsabilidades natural
-  (`Controller → Service → Repository`) y su **inyección de dependencias** hace que los
-  patrones *Strategy* y *Factory* del motor de descuentos sean idiomáticos, no forzados.
-- **Spring Data JPA + Flyway** resuelven la persistencia de la orden (HU3): repositorio
-  declarativo, `@Transactional` para que *validar stock → descontar stock → persistir* sea
-  atómico, y el esquema versionado en migraciones (`db/migration`) — la forma correcta en
-  un entorno bancario, no `ddl-auto`. El decremento de stock se hace con un **UPDATE
-  condicional atómico** (`... SET stock = stock - :qty WHERE id = :id AND stock >= :qty`),
-  que también es el control de concurrencia (ver [§4.1](#41-concurrencia-en-hu3)).
-- **Angular** trae `strict` + `strictTemplates` y, sobre todo, **signals**: el subtotal en
-  vivo (HU1) y la alerta reactiva del 35 % (HU4) se expresan como estado derivado
-  (`computed`) sin *callbacks* manuales. El tooling de test y cobertura viene integrado.
+1. **Ajuste técnico al problema** (lo que se detalla abajo): el problema es un *motor de
+   cálculo con reglas secuenciales, un invariante duro (35 %) y persistencia transaccional*,
+   más una *UI reactiva*. Este stack resuelve cada una de esas piezas con herramientas de
+   primera parte, sin librerías de terceros para lo crítico.
+2. **Alineación con el Grupo Bolívar** (Seguros Bolívar, Davivienda): es el estándar del
+   equipo. Reduce el riesgo de entrega en un ejercicio con tiempo acotado, hace **creíble y
+   fluida la defensa de arquitectura** de los 7 minutos de sustentación (§6) y baja la
+   probabilidad de "no compila en la demo".
+
+El motivo 2 es contexto; el motivo 1 es el que sostiene la decisión. Detalle por pieza:
+
+#### Java + Spring Boot (backend)
+
+- **Exactitud decimal sin dependencias.** `BigDecimal` está en la *stdlib* con
+  `RoundingMode` explícito → la cascada `T0 → −d1 → −d2 → −d3` y el truncamiento al 35 % se
+  calculan con precisión controlada (escala 2, `HALF_UP`). El requisito de HU3 "totales
+  desglosados **exactos**" es un problema de aritmética decimal, no de rendimiento; ningún
+  lenguaje dinámico ofrece esto de fábrica (en JS haría falta `decimal.js`).
+- **Tipos inmutables para los *value objects*.** `Money`, `DiscountBreakdown`,
+  `DiscountLine` son `record`: no pueden mutar por accidente a mitad de la cascada. Cubre
+  4.2 ("tipado estricto, sin `any`") en el núcleo sin esfuerzo — Java no tiene `any`.
+- **Los patrones no son "forzados", son cómo se ensambla un bean.** La DI de Spring hace
+  que *Strategy* (`DiscountRule`), *Factory* (`DiscountRuleFactory` → `DiscountPipeline`
+  inyectable) y *Chain* sean el modo idiomático de construir el motor, no andamiaje extra
+  para cumplir el requisito de "≥ 2 patrones" (4.1).
+- **Atomicidad de HU3 declarativa.** `@Transactional` sobre `checkout()` hace que
+  *validar stock → recalcular → decrementar → persistir* sea todo-o-nada, con *rollback*
+  automático ante `InsufficientStockException`. Es una anotación, no manejo manual de
+  conexión/commit.
+- **Rechazo de entradas corruptas en el borde.** Bean Validation (`@NotEmpty`,
+  `@Positive`) en los DTOs de *request* → el *edge case* "carrito vacío / datos corruptos"
+  se responde con `400` de forma declarativa, antes de llegar al dominio.
+- **Ecosistema de pruebas maduro para el 80 % (4.3).** JUnit 5 `@ParameterizedTest` +
+  `@MethodSource` consume la tabla del oráculo; *slices* `@WebMvcTest` / `@DataJpaTest`
+  aíslan capas; **JaCoCo** aporta el *gate* de cobertura (`LINE` + `BRANCH`) como parte del
+  build. Todo estándar, sin montar infraestructura de test.
+
+#### Spring Data JPA + Flyway (persistencia)
+
+- **El dominio queda 100 % libre de SQL.** El repositorio declarativo se implementa con
+  casi cero código en el adaptador de infraestructura → los puertos del dominio
+  (`OrderRepository`, `ProductRepository`) devuelven tipos de dominio, no filas.
+- **Esquema versionado, auditable y reproducible.** Flyway (`V1`–`V7`) es la forma correcta
+  en banca: cada cambio de esquema es un archivo revisable, sin `ddl-auto` "mágico".
+  **Testcontainers corre las mismas migraciones** → lo que se prueba es el esquema real.
+- **Control de concurrencia sin bloqueos pesimistas.** El decremento de stock es un
+  `UPDATE ... SET stock = stock - :qty WHERE id = :id AND stock >= :qty`: la BD serializa
+  los `UPDATE` sobre la fila y resuelve la carrera por "la última unidad" (ver
+  [§4.1](#41-concurrencia-en-hu3)).
+
+#### Angular (frontend)
+
+- **HU1 y HU4 son estado *derivado*, no eventos.** Con **signals** + `computed`, el subtotal
+  en vivo (HU1) y la visibilidad de la alerta del 35 % (HU4) se declaran como fórmulas
+  sobre el estado del carrito; no hay `subscribe`/`unsubscribe` manual ni fugas. `CartStore`
+  es el patrón *Observer* idiomático que pide 4.1.
+- **El tipado estricto llega al HTML.** `strictTemplates` hace que un *binding* a una
+  propiedad inexistente **no compile** → 4.2 ("tipado e2e") también en la capa de vista, no
+  solo en el `.ts`.
+- **Coordinar el *quote* de HU2 es una tubería, no un `setTimeout`.** RxJS
+  (`toObservable` → `debounceTime(250 ms)` → `switchMap`) expresa "cada cambio del carrito
+  dispara un `POST /checkout/quote`, con *debounce* y cancelación de la petición en vuelo"
+  de forma declarativa.
+- **Tooling integrado para el gate.** `ng test` (Vitest), `ng lint` (ESLint con
+  `@typescript-eslint/no-explicit-any` como **error**) y `ng build` — un comando por tarea,
+  umbral de cobertura en `angular.json`.
+
+#### La combinación (contratos e2e y sustentación)
+
+- **Contrato espejo revisable.** `record` de Java ↔ `interface` de TS en `core/models`: el
+  mismo contrato a ambos lados, visible en el *diff* del PR. Cumple 4.2 ("contratos limpios
+  para el envío y respuesta del carrito").
+- **Una sola verdad numérica.** `packages/fixtures/discount-cases.json` se deserializa
+  igual en JUnit y en Vitest → si alguien rompe la paridad cliente/servidor, fallan las
+  pruebas de ambos lados con el mismo caso.
+- **Defensa creíble en vivo (§6).** Ser el stack real del evaluador convierte los 7 minutos
+  de arquitectura en una conversación sobre *decisiones*, no sobre *sintaxis*.
 
 ### 2.2. Por qué PostgreSQL como base de datos
 
@@ -406,14 +465,22 @@ lecturas triviales es algo de ceremonia, pero la coherencia entre features lo co
     `@WebMvcTest` para el controlador; `@SpringBootTest` para el flujo de checkout completo.
   - El gate `jacocoTestCoverageVerification` falla el build si `LINE` o `BRANCH` < 0.80 en
     los paquetes `checkout.domain` / `checkout.application` (y equivalentes de catalog).
-- **Frontend** (Vitest): `cart.store` (alta/baja/cantidad, subtotal, carrito corrupto);
-  `checkout.facade` (*quote* con debounce, mapeo, errores 4xx/5xx); componente de desglose;
-  componente de alerta del 35 % (visible solo si `capReached`, texto exacto,
-  `role="alert"`). Umbrales de cobertura al 80 % configurados en `angular.json`.
+- **Frontend** (Vitest): `cart.store` (alta/baja/cantidad, subtotal, tope de stock, carrito
+  corrupto); `catalog.store`; `checkout.facade` (*quote* con debounce, mapeo, errores
+  4xx/5xx, `capReached`, `confirm`); servicios de datos; `discount-breakdown` y
+  `savings-limit-alert` (visible solo si `capReached`, texto exacto, `role="alert"`); y los
+  componentes de `catalog` / `cart` / `orders` / `landing` (render, interacción, estados).
+  Umbrales de cobertura al 80 % (statements / branches / functions / lines) en `angular.json`.
+- **Qué se excluye de la cobertura y por qué:** solo `core/models/**` (interfaces sin
+  lógica ejecutable) y `app.ts` (bootstrap de Angular). Todo lo demás — *stores*, *facade*,
+  servicios y componentes — se mide. El gate real y su regla ("nunca bajar el umbral") lo
+  refuerza el sub-agente `auditor-cobertura` (ver [`ia.md`](ia.md) §2.1).
 - **Edge cases obligatorios:** tope del 35 % superado · carrito vacío o con datos
-  corruptos · cupón no registrado o expirado · compra sin stock suficiente.
+  corruptos · cupón no registrado o expirado · compra sin stock suficiente (incluida la
+  variante de carrera concurrente, ver §4.1).
 
-Comandos: ver [`README.md`](../README.md).
+Comandos: ver [`README.md`](../README.md). En CI los corre
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) en cada *push* y PR.
 
 ---
 
@@ -495,7 +562,8 @@ sequenceDiagram
 ## 9. Cómo ejecutar
 
 Instrucciones completas de instalación, variables de entorno y comandos de pruebas en
-[`README.md`](../README.md). En resumen:
+[`README.md`](../README.md); guion de la sustentación de 20 min en
+[`demo.md`](demo.md). En resumen:
 
 ```bash
 # Backend  → http://localhost:8080  (spring-boot-docker-compose levanta PostgreSQL solo)

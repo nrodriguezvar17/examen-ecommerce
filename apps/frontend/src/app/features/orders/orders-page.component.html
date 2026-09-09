@@ -1,0 +1,21 @@
+<section class="page">
+  <header class="head">
+    <h2>Mis compras</h2>
+    <p class="dv-muted">Órdenes confirmadas en este backend, de la más reciente a la más antigua.</p>
+  </header>
+
+  @if (loading()) {
+    <p class="dv-muted">Cargando tus compras…</p>
+  } @else if (isEmpty()) {
+    <div class="dv-card empty">
+      <p>Todavía no has confirmado ninguna compra.</p>
+      <a routerLink="/" class="dv-btn dv-btn--primary">Ir a la tienda</a>
+    </div>
+  } @else {
+    <div class="orders">
+      @for (order of list(); track order.radicado) {
+        <app-order-card [order]="order" />
+      }
+    </div>
+  }
+</section>

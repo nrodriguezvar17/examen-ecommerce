@@ -88,7 +88,8 @@
               "src/app/core/models/**",
               "src/app/app.ts",
               "src/app/features/catalog/**",
-              "src/app/features/cart/**"
+              "src/app/features/cart/**",
+              "src/app/features/shop/**"
             ],
             "coverageThresholds": {
               "statements": 80,

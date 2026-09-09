@@ -16,6 +16,9 @@ public interface ProductRepository {
 
 	Optional<Product> findById(long id);
 
+	/** Full detail (brand, image, reviews) for the product screen. */
+	Optional<ProductDetail> findDetailById(long id);
+
 	/**
 	 * Atomically decrements a product's stock.
 	 *

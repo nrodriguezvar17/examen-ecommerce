@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { App } from './app';
 import { Product } from './core/models/product.model';
@@ -14,6 +15,7 @@ describe('App', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([]),
         { provide: CatalogService, useValue: { products: () => of<readonly Product[]>([]) } },
         { provide: CheckoutService, useValue: { quote: () => of(null) } },
       ],

@@ -1,0 +1,63 @@
+<div class="backdrop">
+  <button type="button" class="scrim" (click)="close()" aria-label="Cerrar detalle"></button>
+
+  <div
+    class="dialog dv-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="product-detail-title"
+  >
+    <button type="button" class="x" (click)="close()" aria-label="Cerrar">✕</button>
+
+    @if (detail(); as product) {
+      <div class="head">
+        @if (product.imageUrl) {
+          <img class="image" [src]="product.imageUrl" [alt]="product.displayName" />
+        }
+        <div class="head-text">
+          <span class="dv-badge">{{ product.category }}</span>
+          <h3 id="product-detail-title">{{ product.displayName }}</h3>
+          @if (product.brand) {
+            <p class="dv-muted brand">Marca: {{ product.brand }}</p>
+          }
+          <app-star-rating [average]="product.ratingAverage" [count]="product.reviewCount" />
+          <p class="price">{{ product.unitPrice | money }}</p>
+        </div>
+      </div>
+
+      <p class="description">{{ product.description }}</p>
+
+      <div class="actions">
+        <span class="dv-muted">Stock: {{ product.stock }} · en tu carrito: {{ inCart() }}</span>
+        <button
+          type="button"
+          class="dv-btn dv-btn--primary"
+          [disabled]="soldOut()"
+          (click)="addToCart()"
+        >
+          {{ soldOut() ? 'Sin stock disponible' : 'Agregar al carrito' }}
+        </button>
+      </div>
+
+      <section class="reviews">
+        <h4>Reseñas ({{ product.reviews.length }})</h4>
+        @if (product.reviews.length === 0) {
+          <p class="dv-muted">Este producto todavía no tiene reseñas.</p>
+        }
+        @for (review of product.reviews; track review.id) {
+          <article class="review">
+            <header>
+              <strong>{{ review.title || 'Reseña' }}</strong>
+              <span class="dv-muted">★ {{ review.rating }}/5 · {{ review.reviewerName }}</span>
+            </header>
+            @if (review.comment) {
+              <p>{{ review.comment }}</p>
+            }
+          </article>
+        }
+      </section>
+    } @else {
+      <p class="dv-muted loading">Cargando el detalle del producto…</p>
+    }
+  </div>
+</div>

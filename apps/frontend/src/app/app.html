@@ -4,12 +4,14 @@
   <div class="brand">
     <img class="logo" src="assets/logo-large.png" alt="Davitienda" />
   </div>
-  <span class="tag">Core E-Commerce · prototipo</span>
+  <nav class="nav">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Tienda</a>
+    <a routerLink="/compras" routerLinkActive="active">Mis compras</a>
+  </nav>
 </header>
 
-<main class="layout">
-  <app-product-list />
-  <app-cart-panel />
+<main>
+  <router-outlet />
 </main>
 
 <app-site-footer />

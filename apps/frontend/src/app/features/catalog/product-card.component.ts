@@ -16,6 +16,7 @@ export class ProductCardComponent {
 
   readonly product = input.required<Product>();
   readonly add = output<Product>();
+  readonly details = output<Product>();
 
   /** true when every available unit of this product is already in the cart. */
   readonly atStockLimit = computed(

@@ -1,0 +1,58 @@
+<article class="dv-card order" [class.open]="open()">
+  <button type="button" class="summary" (click)="toggle()" [attr.aria-expanded]="open()">
+    <span class="main">
+      <span class="radicado">{{ order().radicado }}</span>
+      <span class="dv-muted meta">
+        {{ order().createdAt | date: 'medium' }} · {{ itemCount() }} art. ·
+        <span class="status">{{ order().status }}</span>
+      </span>
+    </span>
+    <span class="total">
+      <strong>{{ order().finalTotal | money }}</strong>
+      <span class="chev" aria-hidden="true">{{ open() ? '▲' : '▼' }}</span>
+    </span>
+  </button>
+
+  @if (open()) {
+    <div class="detail">
+      <ul class="lines">
+        @for (line of order().lines; track line.productId) {
+          <li>
+            <span class="name">{{ line.productName }}</span>
+            <span class="dv-muted qty">{{ line.quantity }} × {{ line.unitPrice | money }}</span>
+            <span class="line-total">{{ line.lineTotal | money }}</span>
+          </li>
+        }
+      </ul>
+
+      <div class="sums">
+        <div class="row">
+          <span>Subtotal</span>
+          <span>{{ order().originalTotal | money }}</span>
+        </div>
+        @for (discount of order().discounts; track discount.type) {
+          <div class="row minus">
+            <span>{{ label(discount.type) }}</span>
+            <span>−{{ discount.amount | money }}</span>
+          </div>
+        }
+        @if (order().couponCode) {
+          <div class="row"><span>Cupón</span><span>{{ order().couponCode }}</span></div>
+        }
+        <div class="row saving">
+          <span>Ahorro total ({{ order().effectiveRate | percent: '1.0-2' }})</span>
+          <strong class="minus">−{{ order().totalDiscount | money }}</strong>
+        </div>
+        @if (order().capReached) {
+          <p class="dv-muted capped">
+            Se alcanzó el tope del 35 %: el ahorro se limitó a ese máximo.
+          </p>
+        }
+        <div class="row final">
+          <span>Total pagado</span>
+          <strong>{{ order().finalTotal | money }}</strong>
+        </div>
+      </div>
+    </div>
+  }
+</article>

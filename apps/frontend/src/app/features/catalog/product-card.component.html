@@ -7,6 +7,9 @@
     <h3>{{ product().displayName }}</h3>
     <p class="dv-muted desc">{{ product().description }}</p>
     <app-star-rating [average]="product().ratingAverage" [count]="product().reviewCount" />
+    <button type="button" class="link details" (click)="details.emit(product())">
+      Ver detalle
+    </button>
     <div class="foot">
       <span class="price">{{ product().unitPrice | money }}</span>
       @if (product().stock <= 0) {

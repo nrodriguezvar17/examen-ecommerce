@@ -47,6 +47,17 @@
   overflow: hidden;
 }
 
+.link {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--davitienda-primary);
+  text-decoration: underline;
+}
+
 .foot {
   display: flex;
   align-items: center;

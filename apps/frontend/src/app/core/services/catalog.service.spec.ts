@@ -26,4 +26,14 @@ describe('CatalogService', () => {
     req.flush([{ id: 1 }]);
     expect(received).toHaveLength(1);
   });
+
+  it('GETs /api/products/:id for the detail screen', () => {
+    let received: { brand?: string | null } | undefined;
+    service.detail(2).subscribe((detail) => (received = detail));
+
+    const req = httpMock.expectOne('/api/products/2');
+    expect(req.request.method).toBe('GET');
+    req.flush({ id: 2, brand: 'LogiCorp', reviews: [] });
+    expect(received?.brand).toBe('LogiCorp');
+  });
 });

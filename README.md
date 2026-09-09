@@ -19,6 +19,10 @@ Justificación del stack, trade-offs, aislamiento del motor y patrones de diseñ
 Factory, Chain/Pipeline, Observer, Repository): **[`docs/arquitectura.md`](docs/arquitectura.md)**.
 Gobernanza de IA (skills, agentes, bitácora de correcciones): **[`docs/ia.md`](docs/ia.md)**.
 Modelo de datos (3FN, migraciones): **[`docs/modelo-datos.md`](docs/modelo-datos.md)**.
+Guion de sustentación (20 min): **[`docs/demo.md`](docs/demo.md)**.
+
+CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) corre en cada *push* a `main` y
+en cada PR — `./gradlew check` (backend + JaCoCo) y `npm ci && lint && test && build` (frontend).
 
 ## Arquitectura de un vistazo
 
@@ -38,9 +42,13 @@ apps/
   frontend/   # SPA Angular (core · features · shared)
 packages/
   fixtures/   # discount-cases.json — oráculo de cálculo compartido por back y front
-docs/         # arquitectura.md · ia.md · modelo-datos.md
+docs/         # arquitectura.md · ia.md · modelo-datos.md · demo.md
 .claude/      # sub-agentes y skills (ver docs/ia.md)
+.github/      # workflows/ci.yml
 ```
+
+> `docs/arquitectura.md §7` justifica qué se excluye de la cobertura y por qué; hoy solo se
+> excluyen `core/models/**` (interfaces sin lógica) y `app.ts` (bootstrap).
 
 ---
 
@@ -49,7 +57,7 @@ docs/         # arquitectura.md · ia.md · modelo-datos.md
 ### Prerrequisitos
 
 - **JDK 17** (probado con Temurin 17). No hace falta instalar Gradle: se usa el wrapper.
-- **Node.js** 20.19+ / 22.12+ / 24, y npm.
+- **Node.js** 22.22.3+ (o 24.15+ / 26), y npm. Lo exige el CLI de Angular 22.
 - **Docker** en marcha (Docker Desktop). Lo usan tanto `bootRun` (levanta PostgreSQL) como
   los tests de integración del backend (Testcontainers).
 

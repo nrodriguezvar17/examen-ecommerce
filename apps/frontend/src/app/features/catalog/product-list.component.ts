@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { CatalogApi } from '../../core/api/catalog-api';
 import { Product } from '../../core/models/product.model';
+import { CatalogService } from '../../core/services/catalog.service';
 import { CartStore } from '../../core/state/cart.store';
 import { ProductCardComponent } from './product-card.component';
 
@@ -15,7 +15,7 @@ import { ProductCardComponent } from './product-card.component';
 export class ProductListComponent {
   private readonly cart = inject(CartStore);
 
-  protected readonly products = toSignal(inject(CatalogApi).products(), {
+  protected readonly products = toSignal(inject(CatalogService).products(), {
     initialValue: [] as readonly Product[],
   });
   protected readonly loading = computed((): boolean => this.products().length === 0);

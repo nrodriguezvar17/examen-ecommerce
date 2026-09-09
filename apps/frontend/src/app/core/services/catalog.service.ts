@@ -2,11 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Product } from '../models/product.model';
-import { CatalogApi } from './catalog-api';
 
-/** Real implementation of {@link CatalogApi}: calls `GET /api/products` on the backend. */
-@Injectable()
-export class HttpCatalogApi extends CatalogApi {
+/** Data-access service for the product catalog (HU1). */
+@Injectable({ providedIn: 'root' })
+export class CatalogService {
   private readonly http = inject(HttpClient);
 
   products(): Observable<readonly Product[]> {

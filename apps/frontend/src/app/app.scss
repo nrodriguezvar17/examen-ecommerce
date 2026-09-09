@@ -1,3 +1,9 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .topbar {
   display: flex;
   align-items: center;
@@ -11,10 +17,6 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  font-weight: 800;
-  font-size: 1.2rem;
-  letter-spacing: -0.01em;
 }
 
 .brand .logo {
@@ -29,9 +31,11 @@
 }
 
 .layout {
+  flex: 1;
   display: grid;
   grid-template-columns: 1fr 360px;
   gap: 1.5rem;
+  width: 100%;
   max-width: 1200px;
   margin: 1.5rem auto;
   padding: 0 1.5rem;

@@ -1,9 +1,9 @@
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { CheckoutApi } from '../api/checkout-api';
 import { DiscountBreakdown } from '../models/discount-breakdown.model';
 import { Product } from '../models/product.model';
+import { CheckoutService } from '../services/checkout.service';
 import { CartStore } from './cart.store';
 import { CheckoutFacade } from './checkout.facade';
 
@@ -29,7 +29,7 @@ describe('CheckoutFacade (HU2)', () => {
   beforeEach(() => {
     quote = vi.fn().mockReturnValue(of(breakdown([{ type: 'CATEGORY', amount: 120 }])));
     TestBed.configureTestingModule({
-      providers: [{ provide: CheckoutApi, useValue: { quote } }],
+      providers: [{ provide: CheckoutService, useValue: { quote } }],
     });
     appRef = TestBed.inject(ApplicationRef);
   });

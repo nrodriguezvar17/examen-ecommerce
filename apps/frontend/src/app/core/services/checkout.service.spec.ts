@@ -1,32 +1,27 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { CheckoutApi } from './checkout-api';
-import { HttpCheckoutApi } from './http-checkout.api';
+import { CheckoutService } from './checkout.service';
 
-describe('HttpCheckoutApi', () => {
-  let api: CheckoutApi;
+describe('CheckoutService', () => {
+  let service: CheckoutService;
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        { provide: CheckoutApi, useClass: HttpCheckoutApi },
-      ],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     });
-    api = TestBed.inject(CheckoutApi);
+    service = TestBed.inject(CheckoutService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => httpMock.verify());
 
   it('POSTs the cart and coupon to /api/checkout/quote', () => {
-    let result: unknown;
-    api
+    let received: unknown;
+    service
       .quote({ items: [{ productId: 2, quantity: 2 }], couponCode: 'WELCOME2026' })
-      .subscribe((value) => (result = value));
+      .subscribe((value) => (received = value));
 
     const req = httpMock.expectOne('/api/checkout/quote');
     expect(req.request.method).toBe('POST');
@@ -34,7 +29,6 @@ describe('HttpCheckoutApi', () => {
       items: [{ productId: 2, quantity: 2 }],
       couponCode: 'WELCOME2026',
     });
-
     req.flush({
       originalTotal: 70,
       lines: [],
@@ -43,6 +37,6 @@ describe('HttpCheckoutApi', () => {
       finalTotal: 70,
       capReached: false,
     });
-    expect(result).toBeTruthy();
+    expect(received).toBeTruthy();
   });
 });

@@ -1,12 +1,19 @@
 <article class="dv-card card">
-  <div class="thumb" [attr.data-cat]="product().category">
-    <span aria-hidden="true">{{ product().category.charAt(0) }}</span>
-  </div>
+  <a class="thumb" [attr.data-cat]="product().category" [routerLink]="['/producto', product().id]">
+    @if (product().imageUrl) {
+      <img [src]="product().imageUrl" [alt]="product().displayName" loading="lazy" />
+    } @else {
+      <span aria-hidden="true">{{ product().category.charAt(0) }}</span>
+    }
+  </a>
   <div class="body">
     <span class="dv-badge">{{ product().category }}</span>
-    <h3>{{ product().displayName }}</h3>
+    <h3>
+      <a [routerLink]="['/producto', product().id]">{{ product().displayName }}</a>
+    </h3>
     <p class="dv-muted desc">{{ product().description }}</p>
     <app-star-rating [average]="product().ratingAverage" [count]="product().reviewCount" />
+    <a class="link details" [routerLink]="['/producto', product().id]">Ver detalle</a>
     <div class="foot">
       <span class="price">{{ product().unitPrice | money }}</span>
       @if (product().stock <= 0) {

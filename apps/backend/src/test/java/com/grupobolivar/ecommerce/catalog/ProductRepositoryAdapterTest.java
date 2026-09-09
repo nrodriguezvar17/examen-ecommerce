@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.grupobolivar.ecommerce.TestcontainersConfiguration;
 import com.grupobolivar.ecommerce.catalog.domain.Product;
+import com.grupobolivar.ecommerce.catalog.domain.ProductDetail;
 import com.grupobolivar.ecommerce.catalog.domain.ProductRepository;
 import com.grupobolivar.ecommerce.catalog.infrastructure.ProductJpaRepository;
 import com.grupobolivar.ecommerce.catalog.infrastructure.ProductRepositoryAdapter;
+import com.grupobolivar.ecommerce.catalog.infrastructure.ProductReviewJpaRepository;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +29,11 @@ class ProductRepositoryAdapterTest {
 	@Autowired
 	ProductJpaRepository jpaRepository;
 
+	@Autowired
+	ProductReviewJpaRepository reviewRepository;
+
 	private ProductRepository repository() {
-		return new ProductRepositoryAdapter(jpaRepository);
+		return new ProductRepositoryAdapter(jpaRepository, reviewRepository);
 	}
 
 	@Test
@@ -56,5 +61,26 @@ class ProductRepositoryAdapterTest {
 	void findByIdReturnsTheDomainProductOrEmpty() {
 		assertThat(repository().findById(2L)).isPresent();
 		assertThat(repository().findById(999_999L)).isEmpty();
+	}
+
+	@Test
+	void findDetailByIdMapsBrandImageAndReviewsNewestFirst() {
+		long laptopId = repository().findAllActive().stream()
+				.filter(product -> product.sku().equals("TEC-LAP-014"))
+				.findFirst().orElseThrow().id();
+
+		ProductDetail detail = repository().findDetailById(laptopId).orElseThrow();
+
+		assertThat(detail.product().id()).isEqualTo(laptopId);
+		assertThat(detail.product().imageUrl()).startsWith("https://loremflickr.com/");
+		assertThat(detail.brand()).isEqualTo("NovaTech");
+		assertThat(detail.reviews()).hasSize(2);
+		assertThat(detail.reviews()).allSatisfy(review -> {
+			assertThat(review.rating()).isBetween(1, 5);
+			assertThat(review.reviewerName()).isNotBlank();
+		});
+		assertThat(detail.reviews()).isSortedAccordingTo(
+				(a, b) -> b.createdAt().compareTo(a.createdAt()));
+		assertThat(repository().findDetailById(999_999L)).isEmpty();
 	}
 }

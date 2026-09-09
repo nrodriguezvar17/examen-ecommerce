@@ -81,6 +81,13 @@ class SchemaMigrationTest {
 				"select count(*) from products p left join product_details d on d.product_id = p.id "
 						+ "where d.product_id is null", Integer.class)).isZero();
 
+		// V6 moved the image to the head table and dropped it from the detail.
+		assertThat(jdbc().queryForObject(
+				"select count(*) from products where image_url is null", Integer.class)).isZero();
+		assertThat(jdbc().queryForObject(
+				"select count(*) from information_schema.columns where table_name = 'product_details' "
+						+ "and column_name = 'image_url'", Integer.class)).isZero();
+
 		assertThat(jdbc().queryForObject("select count(*) from product_reviews", Integer.class))
 				.isGreaterThanOrEqualTo(10);
 

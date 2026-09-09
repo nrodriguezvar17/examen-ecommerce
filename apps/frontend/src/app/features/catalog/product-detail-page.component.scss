@@ -1,0 +1,126 @@
+.page {
+  width: 100%;
+  max-width: 960px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: var(--davitienda-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.state {
+  padding: 2rem 0;
+}
+
+.state.dv-card {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+.media img,
+.placeholder {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--dv-radius);
+  object-fit: cover;
+  display: block;
+}
+
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--davitienda-primary), var(--davitienda-accent));
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info h1 {
+  font-size: 1.6rem;
+  margin: 0.2rem 0;
+}
+
+.brand {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.price {
+  font-size: 1.7rem;
+  font-weight: 800;
+  margin: 0.3rem 0;
+}
+
+.description {
+  margin: 0.4rem 0;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.reviews {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.review {
+  padding: 0.9rem 1.1rem;
+}
+
+.review header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.92rem;
+}
+
+.review .rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.review .rating app-icon {
+  color: var(--davitienda-accent);
+}
+
+.review p {
+  margin: 0.3rem 0 0;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 720px) {
+  .detail {
+    grid-template-columns: 1fr;
+  }
+}

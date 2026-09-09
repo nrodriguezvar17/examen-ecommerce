@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CheckoutFacade } from '../../core/state/checkout.facade';
+import { IconComponent } from '../../shared/icon/icon.component';
 
 /**
  * HU4 — persistent, distinctive notification shown while the 35% savings cap is reached.
@@ -8,6 +9,7 @@ import { CheckoutFacade } from '../../core/state/checkout.facade';
 @Component({
   selector: 'app-savings-limit-alert',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [IconComponent],
   templateUrl: './savings-limit-alert.component.html',
   styleUrl: './savings-limit-alert.component.scss',
 })

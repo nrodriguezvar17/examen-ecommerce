@@ -7,6 +7,7 @@ import com.grupobolivar.ecommerce.checkout.domain.order.OrderLine;
 import com.grupobolivar.ecommerce.checkout.domain.order.OrderRepository;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 /** JPA implementation of {@link OrderRepository}: maps the {@link Order} aggregate to/from entities. */
@@ -40,6 +41,13 @@ public class OrderRepositoryAdapter implements OrderRepository {
 	@Override
 	public Optional<Order> findByRadicado(String radicado) {
 		return orders.findByRadicado(radicado).map(this::toDomain);
+	}
+
+	@Override
+	public List<Order> findRecent(int limit) {
+		return orders.findAllByOrderByCreatedAtDescIdDesc(PageRequest.of(0, limit)).stream()
+				.map(this::toDomain)
+				.toList();
 	}
 
 	private Order toDomain(OrderEntity entity) {

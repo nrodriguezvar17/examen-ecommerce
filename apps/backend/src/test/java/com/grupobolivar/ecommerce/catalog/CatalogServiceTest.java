@@ -21,7 +21,7 @@ class CatalogServiceTest {
 
 	@Test
 	void returnsTheActiveProductsFromTheRepository() {
-		Product product = new Product(1, "TEC-X", "n", "Display", "desc",
+		Product product = new Product(1, "TEC-X", "n", "Display", "desc", "https://img/x.png",
 				new BigDecimal("10.00"), "Tecnología", 5, new BigDecimal("4.00"), 2);
 		when(repository.findAllActive()).thenReturn(List.of(product));
 

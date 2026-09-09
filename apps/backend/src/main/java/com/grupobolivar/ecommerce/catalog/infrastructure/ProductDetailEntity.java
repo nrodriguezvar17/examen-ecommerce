@@ -23,9 +23,6 @@ public class ProductDetailEntity {
 
 	private String brand;
 
-	@Column(name = "image_url")
-	private String imageUrl;
-
 	protected ProductDetailEntity() {
 	}
 
@@ -39,9 +36,5 @@ public class ProductDetailEntity {
 
 	public String getBrand() {
 		return brand;
-	}
-
-	public String getImageUrl() {
-		return imageUrl;
 	}
 }

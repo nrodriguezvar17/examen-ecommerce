@@ -1,5 +1,6 @@
 package com.grupobolivar.ecommerce.shared.api;
 
+import com.grupobolivar.ecommerce.catalog.application.ProductNotFoundException;
 import com.grupobolivar.ecommerce.checkout.application.EmptyCartException;
 import com.grupobolivar.ecommerce.checkout.application.InsufficientStockException;
 import com.grupobolivar.ecommerce.checkout.application.OrderNotFoundException;
@@ -21,7 +22,8 @@ public class GlobalExceptionHandler {
 		return ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), exception.getMessage());
 	}
 
-	@ExceptionHandler({ UnknownProductException.class, OrderNotFoundException.class })
+	@ExceptionHandler({
+			UnknownProductException.class, OrderNotFoundException.class, ProductNotFoundException.class })
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public ErrorResponse handleNotFound(RuntimeException exception) {
 		return ErrorResponse.of(HttpStatus.NOT_FOUND.value(), exception.getMessage());

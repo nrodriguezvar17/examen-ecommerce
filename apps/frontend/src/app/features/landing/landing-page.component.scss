@@ -1,0 +1,136 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3rem;
+}
+
+.hero {
+  text-align: center;
+  padding: 3rem 2rem 3.25rem;
+  border-radius: var(--dv-radius);
+  background: linear-gradient(135deg, var(--davitienda-primary), var(--davitienda-primary-dark));
+  color: #fff;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 0.6rem;
+}
+
+.hero .wordmark {
+  display: block;
+  margin: 0 0 1.25rem;
+  line-height: 0;
+}
+
+.wordmark img {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  /* El logo ya viene blanco; esto lo fuerza a blanco puro por si el asset cambia. */
+  filter: brightness(0) invert(1);
+}
+
+.lead {
+  max-width: 620px;
+  margin: 0 auto 1.6rem;
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.cta {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.cta .dv-btn--primary {
+  background: #fff;
+  border-color: #fff;
+  color: var(--davitienda-primary);
+}
+
+.cta .dv-btn--ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.65);
+  color: #fff;
+}
+
+.features,
+.how {
+  margin-top: 2.5rem;
+}
+
+.features h2,
+.how h2 {
+  text-align: center;
+  margin-bottom: 1.2rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+}
+
+.feature {
+  padding: 1.2rem;
+  text-align: center;
+}
+
+.feature .icon {
+  display: inline-flex;
+  font-size: 1.9rem;
+  color: var(--davitienda-primary);
+}
+
+.feature h3 {
+  margin: 0.5rem 0 0.3rem;
+}
+
+.steps {
+  list-style: none;
+  counter-reset: none;
+  margin: 0 auto 1.5rem;
+  padding: 0;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.steps .num {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #fff;
+  background: var(--davitienda-primary);
+}
+
+.how {
+  text-align: center;
+}
+
+.how .steps {
+  text-align: left;
+}

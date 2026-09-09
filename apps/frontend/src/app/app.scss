@@ -5,55 +5,98 @@
 }
 
 .topbar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.8rem 1.5rem;
+  gap: 1rem;
+  padding: 1.15rem 2rem;
   background: var(--davitienda-primary);
-  border-bottom: 3px solid var(--davitienda-primary-dark);
+  border-bottom: 4px solid var(--davitienda-primary-dark);
   color: #fff;
 }
 
 .brand {
   display: flex;
   align-items: center;
+  text-decoration: none;
 }
 
 .brand .logo {
-  height: 30px;
+  height: 46px;
   width: auto;
   display: block;
 }
 
-.tag {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.layout {
-  flex: 1;
+.menu-toggle {
+  width: 46px;
+  height: 46px;
   display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 1.5rem;
-  width: 100%;
-  max-width: 1200px;
-  margin: 1.5rem auto;
-  padding: 0 1.5rem;
-  align-items: start;
+  place-items: center;
+  font-size: 1.4rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--dv-radius-sm);
 }
 
-.layout > app-cart-panel {
-  display: block;
-  position: sticky;
-  top: 1.5rem;
+.menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.24);
 }
 
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: 1fr;
+.nav {
+  position: absolute;
+  top: 100%;
+  right: 1.25rem;
+  margin-top: 0.5rem;
+  min-width: 210px;
+  display: none;
+  flex-direction: column;
+  background: var(--davitienda-surface);
+  border: 1px solid var(--davitienda-border);
+  border-radius: var(--dv-radius-sm);
+  box-shadow: var(--dv-shadow);
+  overflow: hidden;
+  z-index: 900;
+}
+
+.nav.open {
+  display: flex;
+}
+
+.nav a {
+  padding: 0.85rem 1.1rem;
+  color: var(--davitienda-text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.nav a:hover {
+  background: var(--davitienda-bg);
+}
+
+.nav a.active {
+  color: var(--davitienda-primary);
+  box-shadow: inset 3px 0 0 var(--davitienda-primary);
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    padding: 0.9rem 1.1rem;
   }
 
-  .layout > app-cart-panel {
-    position: static;
+  .brand .logo {
+    height: 36px;
+  }
+
+  .nav {
+    right: 0.75rem;
   }
 }

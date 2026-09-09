@@ -1,23 +1,27 @@
 package com.grupobolivar.ecommerce.catalog.infrastructure;
 
 import com.grupobolivar.ecommerce.catalog.domain.Product;
+import com.grupobolivar.ecommerce.catalog.domain.ProductDetail;
 import com.grupobolivar.ecommerce.catalog.domain.ProductRepository;
+import com.grupobolivar.ecommerce.catalog.domain.Review;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
 /**
  * JPA implementation of {@link ProductRepository}. The only class that touches
- * {@link ProductEntity}; it maps the entity plus its 1:1 detail and rating rows to the
- * domain {@link Product}.
+ * {@link ProductEntity}; it maps the entity plus its 1:1 detail, rating and review rows to
+ * the domain {@link Product} / {@link ProductDetail}.
  */
 @Repository
 public class ProductRepositoryAdapter implements ProductRepository {
 
 	private final ProductJpaRepository products;
+	private final ProductReviewJpaRepository reviews;
 
-	public ProductRepositoryAdapter(ProductJpaRepository products) {
+	public ProductRepositoryAdapter(ProductJpaRepository products, ProductReviewJpaRepository reviews) {
 		this.products = products;
+		this.reviews = reviews;
 	}
 
 	@Override
@@ -28,6 +32,11 @@ public class ProductRepositoryAdapter implements ProductRepository {
 	@Override
 	public Optional<Product> findById(long id) {
 		return products.findById(id).map(this::toDomain);
+	}
+
+	@Override
+	public Optional<ProductDetail> findDetailById(long id) {
+		return products.findWithDetailById(id).map(this::toDetail);
 	}
 
 	@Override
@@ -42,10 +51,20 @@ public class ProductRepositoryAdapter implements ProductRepository {
 				entity.getName(),
 				entity.getDetail().getDisplayName(),
 				entity.getDetail().getDescription(),
+				entity.getImageUrl(),
 				entity.getUnitPrice(),
 				entity.getCategory().getName(),
 				entity.getStock(),
 				entity.getRating().getRatingAverage(),
 				entity.getRating().getReviewCount());
+	}
+
+	private ProductDetail toDetail(ProductEntity entity) {
+		List<Review> productReviews = reviews
+				.findByProductIdOrderByCreatedAtDescIdDesc(entity.getId()).stream()
+				.map(review -> new Review(review.getId(), review.getRating(), review.getTitle(),
+						review.getComment(), review.getReviewerName(), review.getCreatedAt()))
+				.toList();
+		return new ProductDetail(toDomain(entity), entity.getDetail().getBrand(), productReviews);
 	}
 }

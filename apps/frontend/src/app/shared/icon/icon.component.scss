@@ -1,0 +1,15 @@
+:host {
+  display: inline-flex;
+  line-height: 0;
+}
+
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+}
+
+/* Filled variant (e.g. active stars): callers add class="filled" on <app-icon>. */
+:host(.filled) .icon {
+  fill: currentColor;
+}

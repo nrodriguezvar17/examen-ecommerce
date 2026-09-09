@@ -49,7 +49,7 @@ tiempo acotado y permite una **defensa técnica sólida** en la sustentación. M
 familiaridad, cada pieza aporta algo concreto al problema:
 
 - **Java (tipado nominal fuerte)** cubre el requisito 4.2 («tipado estricto de extremo a
-  extremo, sin `any`») sin esfuerzo: el lenguaje no tiene un equivalente a `any`. Los DTId
+  extremo, sin `any`») sin esfuerzo: el lenguaje no tiene un equivalente a `any`. Los DTOs
   de la API se modelan con `record` y validación declarativa (Bean Validation).
 - **Spring Boot** impone una separación de responsabilidades natural
   (`Controller → Service → Repository`) y su **inyección de dependencias** hace que los
@@ -57,7 +57,9 @@ familiaridad, cada pieza aporta algo concreto al problema:
 - **Spring Data JPA + Flyway** resuelven la persistencia de la orden (HU3): repositorio
   declarativo, `@Transactional` para que *validar stock → descontar stock → persistir* sea
   atómico, y el esquema versionado en migraciones (`db/migration`) — la forma correcta en
-  un entorno bancario, no `ddl-auto`.
+  un entorno bancario, no `ddl-auto`. El decremento de stock se hace con un **UPDATE
+  condicional atómico** (`... SET stock = stock - :qty WHERE id = :id AND stock >= :qty`),
+  que también es el control de concurrencia (ver [§4.1](#41-concurrencia-en-hu3)).
 - **Angular** trae `strict` + `strictTemplates` y, sobre todo, **signals**: el subtotal en
   vivo (HU1) y la alerta reactiva del 35 % (HU4) se expresan como estado derivado
   (`computed`) sin *callbacks* manuales. El tooling de test y cobertura viene integrado.
@@ -237,9 +239,11 @@ de persistencia y controladores de la API?»)*
      `ProductEntity`**.
    - `checkout/domain/coupon/CouponCatalog` → devuelve `Coupon`. Implementada por
      `JpaCouponCatalog` (lee la tabla `coupons` + vigencia).
-   - `ProductStockPort` (checkout) es un adaptador fino sobre `ProductRepository` que
-     traduce `Product` → `ProductSnapshot`; así **checkout depende de un contrato de
-     dominio de `catalog`, no de su JPA**.
+   - `ProductStockPort` es el **puerto de salida** de `checkout` (interfaz en su capa
+     `application`). Lo **implementa** el adaptador `CatalogProductStockAdapter`
+     (`checkout/infrastructure`), que consume el `ProductRepository` de `catalog` y
+     traduce `Product` → `ProductSnapshot`. Así **el dominio de `checkout` no se acopla ni
+     a la JPA ni al dominio de `catalog`**: solo conoce su propio contrato.
 4. **Orquestación separada del cálculo.** `CheckoutService` (capa `application`) coordina
    *resolver el carrito → invocar el motor → (HU3: descontar stock → persistir)* y depende
    de esas interfaces. El **cálculo** vive entero en `DiscountPipeline`; el servicio no hace
@@ -250,6 +254,34 @@ de persistencia y controladores de la API?»)*
 Resultado: el motor y los servicios se prueban con dobles en memoria, sin Spring y sin base
 de datos — los tests del `DiscountPipeline` y de `CatalogService` son unitarios puros; solo
 los adaptadores (`ProductRepositoryAdapter`, `@DataJpaTest`) tocan PostgreSQL.
+
+### 4.1. Concurrencia en HU3
+
+Escenario clásico de sustentación: *dos compras simultáneas por la última unidad*. El
+`checkout()` es `@Transactional` y ordena las operaciones como **resolver carrito → validar
+stock (lectura) → recalcular cascada → decrementar stock → persistir orden**. La lectura de
+validación por sí sola sufre una condición de carrera (*check-then-act*): ambas
+transacciones podrían leer `stock = 1` y proceder.
+
+La garantía real está en el **decremento**, que no es un `read-modify-write` en memoria sino
+un **UPDATE condicional atómico** en la base:
+
+```sql
+UPDATE products SET stock = stock - :qty WHERE id = :id AND stock >= :qty
+```
+
+Postgres serializa los `UPDATE` sobre la misma fila: la primera transacción afecta 1 fila,
+la segunda afecta **0**. `CheckoutService` comprueba el número de filas afectadas y, si es
+`0`, lanza `InsufficientStockException` (HTTP 409) y la transacción hace *rollback* — la
+orden no se persiste. Es decir, la condición de stock se vuelve a evaluar **dentro** de la
+escritura atómica, no solo en la lectura previa.
+
+Alternativa considerada y descartada por sobrecoste para este MVP: bloqueo pesimista
+(`SELECT ... FOR UPDATE` vía `@Lock(PESSIMISTIC_WRITE)`) sobre la fila del producto. El
+`UPDATE` guardado da la misma garantía de corrección con menos contención y sin `SELECT`
+extra. El *trade-off*: no se distingue "producto inexistente" de "sin stock" en la ruta de
+concurrencia (ambos → 0 filas), pero esa ambigüedad es inocua porque la validación previa
+ya devolvió 404 para un id inexistente.
 
 ---
 
@@ -327,8 +359,10 @@ lecturas triviales es algo de ceremonia, pero la coherencia entre features lo co
   `CatalogProductStockAdapter`, `DbDiscountSettingsProvider` adaptan JPA / config a las
   interfaces del dominio.
 - **Facade** (frontend): `checkout.facade.ts` oculta a los componentes la coordinación
-  entre el `HttpClient` y el `CartStore` (debounce del *quote*, mapeo a *view-model*,
-  manejo de errores).
+  entre el `HttpClient` y el `CartStore`. Cada cambio de carrito o cupón dispara un
+  `POST /api/checkout/quote`, pero pasa por un `debounceTime(250 ms)` + `switchMap` (RxJS)
+  para no inundar el backend mientras el usuario teclea y para cancelar la petición en
+  vuelo si llega otra. También mapea la respuesta a *view-model* y maneja los errores 4xx/5xx.
 
 ---
 
@@ -339,12 +373,16 @@ lecturas triviales es algo de ceremonia, pero la coherencia entre features lo co
   | Método | Ruta | Efectos | Historia |
   |---|---|---|---|
   | `GET` | `/api/products` | — | HU1 |
+  | `GET` | `/api/products/{id}` | — | detalle de producto (marca, reseñas) |
   | `POST` | `/api/checkout/quote` | ninguno (no toca stock ni BD) | HU2, HU4 |
   | `POST` | `/api/checkout` | valida stock → recalcula → descuenta stock → persiste (`@Transactional`) | HU3 |
-  | `GET` | `/api/orders/{id}` | — | demo de persistencia |
+  | `GET` | `/api/orders` | — | lista "Mis compras" (20 más recientes) |
+  | `GET` | `/api/orders/{radicado}` | — | demo de persistencia |
 
-- **Errores** vía `GlobalExceptionHandler`: `400` cuerpo inválido · `404` producto
-  inexistente · `409` stock insuficiente · `422` cupón inválido/expirado.
+- **Errores** vía `GlobalExceptionHandler`: `400` cuerpo inválido o carrito vacío ·
+  `404` producto u orden inexistente · `409` stock insuficiente. Un **cupón inválido o
+  expirado no es error**: se ignora (no aparece la línea `COUPON` en el desglose) y el
+  frontend lo señala en línea; así el `quote` sigue siendo idempotente y sin efectos.
 - **Backend:** DTOs como `record` + Bean Validation (`@NotEmpty`, `@Positive`). Sin `any`
   posible en Java.
 - **Frontend:** `strict: true`, `strictTemplates: true`, `noImplicitAny: true` en
@@ -401,7 +439,7 @@ flowchart LR
         SVC["CheckoutService<br/>(application)"]
         PIPE["DiscountPipeline + reglas<br/>(domain · Java puro)"]
         PORTS["Puertos:<br/>OrderRepository · ProductStockPort · CouponCatalog"]
-        INFRA["Adaptadores JPA · InMemoryCouponCatalog<br/>(infrastructure)"]
+        INFRA["Adaptadores JPA · JpaCouponCatalog<br/>(infrastructure)"]
         CTRL --> SVC
         SVC --> PIPE
         SVC --> PORTS
@@ -436,12 +474,20 @@ sequenceDiagram
     U->>FE: "Confirmar compra"
     FE->>API: POST /api/checkout {items, coupon}
     API->>SVC: checkout(cmd)
-    SVC->>DB: validar stock
+    Note over SVC,DB: todo el bloque en una @Transactional
+    SVC->>DB: leer productos + validar stock
     SVC->>ENG: calculate(context)  (recálculo, nunca se confía en el cliente)
-    SVC->>DB: decrementar stock + persistir orden  (@Transactional)
-    DB-->>SVC: orderId
-    SVC-->>API: confirmación {orderId, desglose}
-    API-->>FE: 201 {orderId, desglose}
+    SVC->>DB: UPDATE stock = stock - qty WHERE stock >= qty  (atómico)
+    alt filas afectadas = 0 (otra compra ganó la carrera)
+        DB-->>SVC: 0
+        SVC-->>API: InsufficientStockException
+        API-->>FE: 409  (rollback: la orden no se persiste)
+    else ok
+        DB-->>SVC: 1
+        SVC->>DB: persistir orden (líneas, descuentos, radicado)
+        SVC-->>API: confirmación {radicado, desglose}
+        API-->>FE: 201 {radicado, desglose}
+    end
 ```
 
 ---
@@ -460,5 +506,5 @@ cd apps/frontend && npm install && npm start
 
 # Pruebas + cobertura  (el backend necesita Docker en marcha para los tests de integración)
 cd apps/backend  && ./gradlew check          # tests + gate JaCoCo 80%
-cd apps/frontend && npm test                 # Vitest + cobertura 80%
+cd apps/frontend && npm test                 # = ng test (runner Vitest, builder @angular/build:unit-test) + cobertura 80%
 ```

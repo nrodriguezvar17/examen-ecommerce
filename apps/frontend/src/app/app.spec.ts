@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { App } from './app';
 import { Product } from './core/models/product.model';
@@ -14,6 +15,7 @@ describe('App', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([]),
         { provide: CatalogService, useValue: { products: () => of<readonly Product[]>([]) } },
         { provide: CheckoutService, useValue: { quote: () => of(null) } },
       ],
@@ -32,5 +34,24 @@ describe('App', () => {
 
     expect(compiled.querySelector('.topbar img')?.getAttribute('alt')).toBe('Davitienda');
     expect(compiled.querySelector('app-site-footer')?.textContent).toContain('Davitienda');
+  });
+
+  it('toggles the hamburger menu open and closed', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const toggle = compiled.querySelector<HTMLButtonElement>('.menu-toggle')!;
+
+    expect(compiled.querySelector('.nav.open')).toBeNull();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(compiled.querySelector('.nav.open')).not.toBeNull();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+
+    compiled.querySelector<HTMLAnchorElement>('.nav a')!.click();
+    fixture.detectChanges();
+    expect(compiled.querySelector('.nav.open')).toBeNull();
   });
 });

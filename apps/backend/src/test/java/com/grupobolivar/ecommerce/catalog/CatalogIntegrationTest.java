@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.grupobolivar.ecommerce.TestcontainersConfiguration;
+import com.jayway.jsonpath.JsonPath;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,25 @@ class CatalogIntegrationTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$", Matchers.hasSize(10)))
 				.andExpect(jsonPath("$[0].sku").value("DEP-BAL-005"))
+				.andExpect(jsonPath("$[0].imageUrl").value(Matchers.startsWith("https://loremflickr.com/")))
 				.andExpect(jsonPath("$[?(@.sku == 'TEC-LAP-014')].ratingAverage").value(Matchers.contains(4.5)));
+	}
+
+	@Test
+	void servesTheProductDetailWithBrandAndReviews() throws Exception {
+		String catalog = mockMvc.perform(get("/api/products"))
+				.andReturn().getResponse().getContentAsString();
+		java.util.List<Integer> ids = JsonPath.read(catalog, "$[?(@.sku == 'TEC-LAP-014')].id");
+		int laptopId = ids.get(0);
+
+		mockMvc.perform(get("/api/products/{id}", laptopId))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.sku").value("TEC-LAP-014"))
+				.andExpect(jsonPath("$.brand").value("NovaTech"))
+				.andExpect(jsonPath("$.imageUrl").value(Matchers.startsWith("https://loremflickr.com/")))
+				.andExpect(jsonPath("$.reviews", Matchers.hasSize(2)));
+
+		mockMvc.perform(get("/api/products/999999"))
+				.andExpect(status().isNotFound());
 	}
 }

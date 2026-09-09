@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MoneyPipe } from '../../shared/money.pipe';
 import { StarRatingComponent } from '../../shared/star-rating.component';
 import { Product } from '../../core/models/product.model';
@@ -7,7 +8,7 @@ import { CartStore } from '../../core/state/cart.store';
 @Component({
   selector: 'app-product-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MoneyPipe, StarRatingComponent],
+  imports: [MoneyPipe, StarRatingComponent, RouterLink],
   templateUrl: './product-card.component.html',
   styleUrl: './product-card.component.scss',
 })

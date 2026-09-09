@@ -1,0 +1,41 @@
+<section class="hero">
+  <p class="eyebrow">Core E-Commerce</p>
+  <h1 class="wordmark">
+    <img src="assets/logo-large.png" alt="Davitienda" />
+  </h1>
+  <p class="lead">
+    Una tienda con un <strong>sistema de descuentos acumulativos</strong> transparente: ves
+    cómo se forma cada ahorro, con un tope claro del 35 %, y tu compra queda registrada de
+    principio a fin.
+  </p>
+  <div class="cta">
+    <a routerLink="/store" class="dv-btn dv-btn--primary">Explorar la tienda</a>
+    <a routerLink="/shopping" class="dv-btn dv-btn--ghost">Ver mis compras</a>
+  </div>
+</section>
+
+<section class="features">
+  <h2>Qué ofrece</h2>
+  <div class="grid">
+    @for (feature of features; track feature.title) {
+      <article class="dv-card feature">
+        <span class="icon"><app-icon [name]="feature.icon" /></span>
+        <h3>{{ feature.title }}</h3>
+        <p class="dv-muted">{{ feature.text }}</p>
+      </article>
+    }
+  </div>
+</section>
+
+<section class="how">
+  <h2>Cómo funciona</h2>
+  <ol class="steps">
+    @for (step of steps; track step; let i = $index) {
+      <li>
+        <span class="num" aria-hidden="true">{{ i + 1 }}</span>
+        <span>{{ step }}</span>
+      </li>
+    }
+  </ol>
+  <a routerLink="/store" class="dv-btn dv-btn--primary">Empezar a comprar</a>
+</section>

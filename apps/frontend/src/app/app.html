@@ -1,12 +1,31 @@
 <app-global-loader />
 
 <header class="topbar">
-  <div class="brand">
+  <a class="brand" routerLink="/" (click)="closeMenu()">
     <img class="logo" src="assets/logo-large.png" alt="Davitienda" />
-  </div>
-  <nav class="nav">
-    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Tienda</a>
-    <a routerLink="/compras" routerLinkActive="active">Mis compras</a>
+  </a>
+
+  <button
+    type="button"
+    class="menu-toggle"
+    [attr.aria-expanded]="menuOpen()"
+    aria-controls="main-nav"
+    aria-label="Abrir menú"
+    (click)="toggleMenu()"
+  >
+    <span aria-hidden="true">{{ menuOpen() ? '✕' : '☰' }}</span>
+  </button>
+
+  <nav id="main-nav" class="nav" [class.open]="menuOpen()">
+    <a
+      routerLink="/"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      (click)="closeMenu()"
+      >Inicio</a
+    >
+    <a routerLink="/store" routerLinkActive="active" (click)="closeMenu()">Tienda</a>
+    <a routerLink="/shopping" routerLinkActive="active" (click)="closeMenu()">Mis compras</a>
   </nav>
 </header>
 

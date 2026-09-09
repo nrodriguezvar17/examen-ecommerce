@@ -35,4 +35,23 @@ describe('App', () => {
     expect(compiled.querySelector('.topbar img')?.getAttribute('alt')).toBe('Davitienda');
     expect(compiled.querySelector('app-site-footer')?.textContent).toContain('Davitienda');
   });
+
+  it('toggles the hamburger menu open and closed', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const toggle = compiled.querySelector<HTMLButtonElement>('.menu-toggle')!;
+
+    expect(compiled.querySelector('.nav.open')).toBeNull();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(compiled.querySelector('.nav.open')).not.toBeNull();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+
+    compiled.querySelector<HTMLAnchorElement>('.nav a')!.click();
+    fixture.detectChanges();
+    expect(compiled.querySelector('.nav.open')).toBeNull();
+  });
 });

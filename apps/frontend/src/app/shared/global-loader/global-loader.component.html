@@ -1,3 +1,6 @@
-@if (loading()) {
-  <div class="loader" role="progressbar" aria-label="Cargando"></div>
+@if (visible()) {
+  <div class="overlay" role="status" aria-live="polite" aria-label="Cargando">
+    <span class="spinner" aria-hidden="true"></span>
+    <span class="sr-only">Cargando…</span>
+  </div>
 }

@@ -29,7 +29,9 @@ jobs:
 
       # ubuntu-latest ya trae Docker en marcha → Testcontainers levanta PostgreSQL.
       - name: ./gradlew check
-        run: ./gradlew check --no-daemon --console=plain
+        run: |
+          chmod +x ./gradlew
+          ./gradlew check --no-daemon --console=plain
 
       - name: Publicar reporte de tests
         if: always()

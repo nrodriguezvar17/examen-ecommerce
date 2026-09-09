@@ -546,17 +546,68 @@ sequenceDiagram
 
 ## 9. Cómo ejecutar
 
-Instrucciones completas de instalación, variables de entorno y comandos de pruebas en
-[`README.md`](../README.md). En resumen:
+Instrucciones completas (variables de entorno, conexión a la base, edge cases) en
+[`README.md`](../README.md). Resumen para una instalación desde cero.
+
+### Prerrequisitos
+
+- **JDK 17**, **Node.js 22.22.3+** y npm.
+- **Docker** en marcha. Es el único servicio externo: no hay que instalar ni PostgreSQL ni
+  Gradle (se usa el *wrapper*).
+
+### La base de datos: nada que crear a mano
+
+No hay que crear la base, ni el usuario, ni ejecutar ningún `.sql`. Al arrancar el backend:
 
 ```bash
-# Backend  → http://localhost:8080  (spring-boot-docker-compose levanta PostgreSQL solo)
+cd apps/backend && ./gradlew bootRun          # → http://localhost:8080
+```
+
+1. **`spring-boot-docker-compose`** lee `apps/backend/compose.yaml` y **levanta un contenedor
+   PostgreSQL 16** (`ecommerce-postgres`) en `localhost:5432`, con base `ecommerce` y
+   usuario/clave `ecommerce` / `ecommerce`. Con `lifecycle-management: start-only` el
+   contenedor **sigue vivo** al parar la app (para poder inspeccionarlo).
+2. Spring conecta el *datasource* automáticamente (config por defecto en `application.yml`).
+3. **Flyway** ejecuta las migraciones `V1`–`V7` de `src/main/resources/db/migration/` sobre
+   esa base **al iniciar**: crea las 11 tablas + la vista y carga los datos de referencia y
+   el catálogo de ejemplo. Hibernate queda en `ddl-auto: validate` (solo comprueba que las
+   entidades cuadren con el esquema; no lo modifica).
+
+Resultado: `git clone` + `./gradlew bootRun` deja la API operativa con la base creada,
+migrada y poblada. Para inspeccionarla:
+
+```bash
+cd apps/backend
+docker compose exec postgres psql -U ecommerce -d ecommerce   # o un cliente externo a localhost:5432
+```
+
+Para empezar de cero otra vez: `docker compose down -v` (borra el volumen) → el siguiente
+`bootRun` recrea todo desde las migraciones.
+
+### Usar un PostgreSQL propio (sin el contenedor)
+
+```bash
+export SPRING_DOCKER_COMPOSE_ENABLED=false
+export SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:5432/<base>
+export SPRING_DATASOURCE_USERNAME=<user>
+export SPRING_DATASOURCE_PASSWORD=<pass>
 cd apps/backend && ./gradlew bootRun
+```
 
-# Frontend → http://localhost:4200
-cd apps/frontend && npm install && npm start
+La base de datos destino debe existir y estar vacía; **Flyway crea el esquema y los datos**
+igual que en el caso anterior.
 
-# Pruebas + cobertura  (el backend necesita Docker en marcha para los tests de integración)
-cd apps/backend  && ./gradlew check          # tests + gate JaCoCo 80%
-cd apps/frontend && npm test                 # = ng test (runner Vitest, builder @angular/build:unit-test) + cobertura 80%
+### Frontend
+
+```bash
+cd apps/frontend && npm install && npm start   # → http://localhost:4200 (proxy /api → :8080)
+```
+
+### Pruebas + cobertura
+
+```bash
+cd apps/backend  && ./gradlew check   # tests + gate JaCoCo 80%. Necesita Docker: los tests de
+                                      # integración levantan su propio PostgreSQL efímero con
+                                      # Testcontainers y corren las mismas migraciones V1–V7.
+cd apps/frontend && npm test          # ng test (runner Vitest) + cobertura, umbral 80%
 ```

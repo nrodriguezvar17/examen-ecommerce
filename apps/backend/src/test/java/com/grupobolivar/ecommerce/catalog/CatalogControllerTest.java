@@ -36,7 +36,7 @@ class CatalogControllerTest {
 	private static Product mouse() {
 		return new Product(
 				2, "TEC-MOU-001", "Mouse inalámbrico", "Mouse inalámbrico silencioso",
-				"Mouse óptico inalámbrico.", "https://picsum.photos/seed/mouse/600/400",
+				"Mouse óptico inalámbrico.", "https://loremflickr.com/600/400/computer,mouse?lock=1",
 				new BigDecimal("25.00"), "Tecnología", 40, new BigDecimal("5.00"), 1);
 	}
 
@@ -49,7 +49,7 @@ class CatalogControllerTest {
 				.andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(1)))
 				.andExpect(jsonPath("$[0].sku").value("TEC-MOU-001"))
 				.andExpect(jsonPath("$[0].displayName").value("Mouse inalámbrico silencioso"))
-				.andExpect(jsonPath("$[0].imageUrl").value("https://picsum.photos/seed/mouse/600/400"))
+				.andExpect(jsonPath("$[0].imageUrl").value("https://loremflickr.com/600/400/computer,mouse?lock=1"))
 				.andExpect(jsonPath("$[0].unitPrice").value(25.00))
 				.andExpect(jsonPath("$[0].category").value("Tecnología"))
 				.andExpect(jsonPath("$[0].stock").value(40));
@@ -67,7 +67,7 @@ class CatalogControllerTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(2))
 				.andExpect(jsonPath("$.brand").value("LogiCorp"))
-				.andExpect(jsonPath("$.imageUrl").value("https://picsum.photos/seed/mouse/600/400"))
+				.andExpect(jsonPath("$.imageUrl").value("https://loremflickr.com/600/400/computer,mouse?lock=1"))
 				.andExpect(jsonPath("$.reviews[0].reviewerName").value("Sofía R."))
 				.andExpect(jsonPath("$.reviews[0].rating").value(5));
 	}

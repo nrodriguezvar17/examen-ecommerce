@@ -29,7 +29,7 @@ class CatalogIntegrationTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$", Matchers.hasSize(10)))
 				.andExpect(jsonPath("$[0].sku").value("DEP-BAL-005"))
-				.andExpect(jsonPath("$[0].imageUrl").value(Matchers.startsWith("https://picsum.photos/")))
+				.andExpect(jsonPath("$[0].imageUrl").value(Matchers.startsWith("https://loremflickr.com/")))
 				.andExpect(jsonPath("$[?(@.sku == 'TEC-LAP-014')].ratingAverage").value(Matchers.contains(4.5)));
 	}
 
@@ -44,7 +44,7 @@ class CatalogIntegrationTest {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.sku").value("TEC-LAP-014"))
 				.andExpect(jsonPath("$.brand").value("NovaTech"))
-				.andExpect(jsonPath("$.imageUrl").value(Matchers.startsWith("https://picsum.photos/")))
+				.andExpect(jsonPath("$.imageUrl").value(Matchers.startsWith("https://loremflickr.com/")))
 				.andExpect(jsonPath("$.reviews", Matchers.hasSize(2)));
 
 		mockMvc.perform(get("/api/products/999999"))

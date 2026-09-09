@@ -8,7 +8,7 @@ import { ProductDetailPageComponent } from './product-detail-page.component';
 
 const detail: ProductDetail = {
   id: 2, sku: 'TEC-MOU-001', name: 'Mouse', displayName: 'Mouse inalámbrico silencioso',
-  description: 'Mouse óptico.', imageUrl: 'https://picsum.photos/seed/mouse/600/400',
+  description: 'Mouse óptico.', imageUrl: 'https://loremflickr.com/600/400/computer,mouse?lock=1',
   unitPrice: 25, category: 'Tecnología', stock: 40, ratingAverage: 5, reviewCount: 1,
   brand: 'NovaTech',
   reviews: [

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CartStore } from '../../core/state/cart.store';
 import { CheckoutFacade } from '../../core/state/checkout.facade';
 import { MoneyPipe } from '../../shared/money.pipe';
@@ -16,11 +16,8 @@ import { SavingsLimitAlertComponent } from '../checkout/savings-limit-alert.comp
 export class CartPanelComponent {
   protected readonly cart = inject(CartStore);
   protected readonly checkout = inject(CheckoutFacade);
-  protected readonly confirmed = signal(false);
 
   confirm(): void {
-    this.confirmed.set(true);
-    this.cart.clear();
-    setTimeout(() => this.confirmed.set(false), 4000);
+    this.checkout.confirm();
   }
 }

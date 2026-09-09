@@ -1,10 +1,12 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { DiscountBreakdown } from '../models/discount-breakdown.model';
 import { Product } from '../models/product.model';
 import { CheckoutService } from '../services/checkout.service';
 import { CartStore } from './cart.store';
+import { CatalogStore } from './catalog.store';
 import { CheckoutFacade } from './checkout.facade';
 
 const laptop: Product = {
@@ -22,14 +24,21 @@ function breakdown(lines: DiscountBreakdown['lines']): DiscountBreakdown {
 
 const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-describe('CheckoutFacade (HU2)', () => {
+describe('CheckoutFacade', () => {
   let quote: ReturnType<typeof vi.fn>;
+  let confirm: ReturnType<typeof vi.fn>;
+  let reload: ReturnType<typeof vi.fn>;
   let appRef: ApplicationRef;
 
   beforeEach(() => {
     quote = vi.fn().mockReturnValue(of(breakdown([{ type: 'CATEGORY', amount: 120 }])));
+    confirm = vi.fn();
+    reload = vi.fn();
     TestBed.configureTestingModule({
-      providers: [{ provide: CheckoutService, useValue: { quote } }],
+      providers: [
+        { provide: CheckoutService, useValue: { quote, confirm } },
+        { provide: CatalogStore, useValue: { reload } },
+      ],
     });
     appRef = TestBed.inject(ApplicationRef);
   });
@@ -64,5 +73,58 @@ describe('CheckoutFacade (HU2)', () => {
 
     await wait(320);
     expect(facade.couponError()).toBe('Cupón no válido o expirado');
+  });
+
+  it('confirm() persists the order, empties the cart and refreshes the catalog (HU3)', () => {
+    confirm.mockReturnValue(
+      of({
+        radicado: 'ORD-20260908143025017',
+        createdAt: '2026-09-08T19:30:25Z',
+        status: 'COMPRADO',
+        breakdown: breakdown([{ type: 'CATEGORY', amount: 120 }]),
+      }),
+    );
+    const facade = TestBed.inject(CheckoutFacade);
+    const cart = TestBed.inject(CartStore);
+    cart.add(laptop);
+
+    facade.confirm();
+
+    expect(confirm).toHaveBeenCalledWith({
+      items: [{ productId: 1, quantity: 1 }],
+      couponCode: null,
+    });
+    expect(facade.confirmation()?.radicado).toBe('ORD-20260908143025017');
+    expect(facade.confirming()).toBe(false);
+    expect(cart.isEmpty()).toBe(true);
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('confirm() surfaces the backend message on a 409 and keeps the cart', () => {
+    confirm.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 409,
+            error: { status: 409, message: "Stock insuficiente para 'Laptop': se pidieron 1 y hay 0" },
+          }),
+      ),
+    );
+    const facade = TestBed.inject(CheckoutFacade);
+    const cart = TestBed.inject(CartStore);
+    cart.add(laptop);
+
+    facade.confirm();
+
+    expect(facade.checkoutError()).toBe("Stock insuficiente para 'Laptop': se pidieron 1 y hay 0");
+    expect(facade.confirmation()).toBeNull();
+    expect(cart.isEmpty()).toBe(false);
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('confirm() is a no-op while the cart is empty', () => {
+    const facade = TestBed.inject(CheckoutFacade);
+    facade.confirm();
+    expect(confirm).not.toHaveBeenCalled();
   });
 });

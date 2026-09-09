@@ -39,4 +39,32 @@ describe('CheckoutService', () => {
     });
     expect(received).toBeTruthy();
   });
+
+  it('POSTs the order to /api/checkout and returns the confirmation (HU3)', () => {
+    let received: { radicado?: string } | undefined;
+    service
+      .confirm({ items: [{ productId: 2, quantity: 3 }], couponCode: null })
+      .subscribe((value) => (received = value));
+
+    const req = httpMock.expectOne('/api/checkout');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      items: [{ productId: 2, quantity: 3 }],
+      couponCode: null,
+    });
+    req.flush({
+      radicado: 'ORD-20260908143025017',
+      createdAt: '2026-09-08T19:30:25Z',
+      status: 'COMPRADO',
+      breakdown: {
+        originalTotal: 75,
+        lines: [{ type: 'CATEGORY', amount: 7.5 }],
+        totalDiscount: 7.5,
+        effectiveRate: 0.1,
+        finalTotal: 67.5,
+        capReached: false,
+      },
+    });
+    expect(received?.radicado).toBe('ORD-20260908143025017');
+  });
 });

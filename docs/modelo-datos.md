@@ -73,7 +73,7 @@ erDiagram
         numeric     unit_price  "numeric(12,2) >= 0"
         bigint      category_id FK
         integer     stock       ">= 0"
-        varchar     image_url   "nullable (V6: movida desde product_details)"
+        varchar     image_url   "nullable"
         boolean     active
         timestamptz created_at
     }

@@ -19,7 +19,6 @@ Justificación del stack, trade-offs, aislamiento del motor y patrones de diseñ
 Factory, Chain/Pipeline, Observer, Repository): **[`docs/arquitectura.md`](docs/arquitectura.md)**.
 Gobernanza de IA (skills, agentes, bitácora de correcciones): **[`docs/ia.md`](docs/ia.md)**.
 Modelo de datos (3FN, migraciones): **[`docs/modelo-datos.md`](docs/modelo-datos.md)**.
-Guion de sustentación (20 min): **[`docs/demo.md`](docs/demo.md)**.
 
 CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) corre en cada *push* a `main` y
 en cada PR — `./gradlew check` (backend + JaCoCo) y `npm ci && lint && test && build` (frontend).
@@ -42,7 +41,7 @@ apps/
   frontend/   # SPA Angular (core · features · shared)
 packages/
   fixtures/   # discount-cases.json — oráculo de cálculo compartido por back y front
-docs/         # arquitectura.md · ia.md · modelo-datos.md · demo.md
+docs/         # arquitectura.md · ia.md · modelo-datos.md
 .claude/      # sub-agentes y skills (ver docs/ia.md)
 .github/      # workflows/ci.yml
 ```

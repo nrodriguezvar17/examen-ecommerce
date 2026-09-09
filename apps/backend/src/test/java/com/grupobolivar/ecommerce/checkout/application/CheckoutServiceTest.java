@@ -11,6 +11,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.grupobolivar.ecommerce.checkout.application.command.CheckoutCommand;
+import com.grupobolivar.ecommerce.checkout.application.command.QuoteCommand;
+import com.grupobolivar.ecommerce.checkout.application.exception.EmptyCartException;
+import com.grupobolivar.ecommerce.checkout.application.exception.InsufficientStockException;
+import com.grupobolivar.ecommerce.checkout.application.exception.UnknownProductException;
+import com.grupobolivar.ecommerce.checkout.application.port.DiscountSettingsProvider;
+import com.grupobolivar.ecommerce.checkout.application.port.ProductSnapshot;
+import com.grupobolivar.ecommerce.checkout.application.port.ProductStockPort;
 import com.grupobolivar.ecommerce.checkout.domain.coupon.Coupon;
 import com.grupobolivar.ecommerce.checkout.domain.coupon.CouponCatalog;
 import com.grupobolivar.ecommerce.checkout.domain.discount.DiscountBreakdown;

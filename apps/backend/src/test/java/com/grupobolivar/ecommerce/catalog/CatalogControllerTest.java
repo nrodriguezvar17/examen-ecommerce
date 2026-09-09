@@ -8,7 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.grupobolivar.ecommerce.catalog.api.CatalogController;
 import com.grupobolivar.ecommerce.catalog.application.CatalogService;
-import com.grupobolivar.ecommerce.catalog.application.ProductNotFoundException;
+import com.grupobolivar.ecommerce.catalog.application.exception.ProductNotFoundException;
 import com.grupobolivar.ecommerce.catalog.domain.Product;
 import com.grupobolivar.ecommerce.catalog.domain.ProductDetail;
 import com.grupobolivar.ecommerce.catalog.domain.Review;

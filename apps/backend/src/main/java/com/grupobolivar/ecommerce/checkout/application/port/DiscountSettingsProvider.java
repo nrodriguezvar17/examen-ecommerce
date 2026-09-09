@@ -1,4 +1,4 @@
-package com.grupobolivar.ecommerce.checkout.application;
+package com.grupobolivar.ecommerce.checkout.application.port;
 
 import com.grupobolivar.ecommerce.checkout.domain.discount.DiscountConfig;
 

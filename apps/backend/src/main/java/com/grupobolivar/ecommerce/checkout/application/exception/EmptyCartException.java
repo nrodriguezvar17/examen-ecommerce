@@ -1,4 +1,4 @@
-package com.grupobolivar.ecommerce.checkout.application;
+package com.grupobolivar.ecommerce.checkout.application.exception;
 
 /** Raised when a checkout request carries no cart lines. Maps to HTTP 400. */
 public class EmptyCartException extends RuntimeException {

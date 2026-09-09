@@ -1,5 +1,6 @@
 package com.grupobolivar.ecommerce.catalog.application;
 
+import com.grupobolivar.ecommerce.catalog.application.exception.ProductNotFoundException;
 import com.grupobolivar.ecommerce.catalog.domain.Product;
 import com.grupobolivar.ecommerce.catalog.domain.ProductDetail;
 import com.grupobolivar.ecommerce.catalog.domain.ProductRepository;

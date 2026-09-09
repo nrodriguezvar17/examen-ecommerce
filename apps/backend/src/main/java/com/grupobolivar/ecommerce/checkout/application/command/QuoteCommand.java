@@ -1,4 +1,4 @@
-package com.grupobolivar.ecommerce.checkout.application;
+package com.grupobolivar.ecommerce.checkout.application.command;
 
 import java.util.List;
 

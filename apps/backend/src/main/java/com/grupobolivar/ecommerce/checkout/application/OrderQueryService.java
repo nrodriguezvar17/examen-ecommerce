@@ -1,5 +1,6 @@
 package com.grupobolivar.ecommerce.checkout.application;
 
+import com.grupobolivar.ecommerce.checkout.application.exception.OrderNotFoundException;
 import com.grupobolivar.ecommerce.checkout.domain.order.Order;
 import com.grupobolivar.ecommerce.checkout.domain.order.OrderRepository;
 import java.util.List;

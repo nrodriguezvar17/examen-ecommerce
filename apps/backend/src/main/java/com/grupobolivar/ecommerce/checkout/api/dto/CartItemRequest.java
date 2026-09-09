@@ -1,4 +1,4 @@
-package com.grupobolivar.ecommerce.checkout.api;
+package com.grupobolivar.ecommerce.checkout.api.dto;
 
 import jakarta.validation.constraints.Positive;
 

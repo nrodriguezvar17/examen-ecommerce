@@ -175,9 +175,10 @@ com.grupobolivar.ecommerce
 ├── catalog/
 │   ├── domain/                  # Product (record), ProductRepository (interfaz)   (Java puro)
 │   ├── application/             # CatalogService
+│   │   └── exception/           #   ProductNotFoundException
 │   ├── infrastructure/          # ProductEntity + detalle + vista rating, ProductJpaRepository,
 │   │                            #   ProductRepositoryAdapter (único que toca la entidad)
-│   └── api/                     # CatalogController, ProductResponse (record)
+│   └── api/                     # CatalogController · api/dto/ → *Response (records)
 ├── checkout/
 │   ├── domain/
 │   │   ├── model/               # Money, CartItem, Cart               (Java puro)
@@ -189,11 +190,13 @@ com.grupobolivar.ecommerce
 │   │   │   ├── DiscountRuleFactory     (Factory)
 │   │   │   └── DiscountContext · DiscountBreakdown · DiscountLine
 │   │   └── coupon/              # Coupon, CouponCatalog (puerto)
-│   ├── application/             # CheckoutService + puertos (ProductStockPort,
-│   │                            #   DiscountSettingsProvider) — HU3: OrderRepository
+│   ├── application/             # CheckoutService · OrderQueryService · RadicadoGenerator · OrderConfirmation
+│   │   ├── command/             #   CheckoutCommand · QuoteCommand
+│   │   ├── port/                #   ProductStockPort · DiscountSettingsProvider · ProductSnapshot
+│   │   └── exception/           #   EmptyCartException · InsufficientStockException · UnknownProductException · OrderNotFoundException
 │   ├── infrastructure/          # entidades JPA, JpaCouponCatalog, adaptadores, DiscountProperties
-│   └── api/                     # CheckoutController, DTOs (record)
-└── shared/api/                  # GlobalExceptionHandler, ErrorResponse
+│   └── api/                     # CheckoutController · OrderController · api/dto/ → *Request / *Response (records)
+└── shared/api/                  # GlobalExceptionHandler · api/dto/ErrorResponse
 ```
 
 Se agrupa **por feature** (catalog / checkout) y dentro de cada feature por **capa**
@@ -283,8 +286,8 @@ de persistencia y controladores de la API?»)*
      `ProductEntity`**.
    - `checkout/domain/coupon/CouponCatalog` → devuelve `Coupon`. Implementada por
      `JpaCouponCatalog` (lee la tabla `coupons` + vigencia).
-   - `ProductStockPort` es el **puerto de salida** de `checkout` (interfaz en su capa
-     `application`). Lo **implementa** el adaptador `CatalogProductStockAdapter`
+   - `ProductStockPort` es el **puerto de salida** de `checkout` (interfaz en
+     `checkout/application/port`). Lo **implementa** el adaptador `CatalogProductStockAdapter`
      (`checkout/infrastructure`), que consume el `ProductRepository` de `catalog` y
      traduce `Product` → `ProductSnapshot`. Así **el dominio de `checkout` no se acopla ni
      a la JPA ni al dominio de `catalog`**: solo conoce su propio contrato.

@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.grupobolivar.ecommerce.checkout.application.OrderNotFoundException;
+import com.grupobolivar.ecommerce.checkout.application.exception.OrderNotFoundException;
 import com.grupobolivar.ecommerce.checkout.application.OrderQueryService;
 import com.grupobolivar.ecommerce.checkout.domain.discount.DiscountType;
 import com.grupobolivar.ecommerce.checkout.domain.model.Money;

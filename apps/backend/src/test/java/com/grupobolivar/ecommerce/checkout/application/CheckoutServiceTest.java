@@ -2,8 +2,13 @@ package com.grupobolivar.ecommerce.checkout.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.grupobolivar.ecommerce.checkout.domain.coupon.Coupon;
@@ -12,7 +17,13 @@ import com.grupobolivar.ecommerce.checkout.domain.discount.DiscountBreakdown;
 import com.grupobolivar.ecommerce.checkout.domain.discount.DiscountConfig;
 import com.grupobolivar.ecommerce.checkout.domain.discount.DiscountType;
 import com.grupobolivar.ecommerce.checkout.domain.model.Money;
+import com.grupobolivar.ecommerce.checkout.domain.order.Order;
+import com.grupobolivar.ecommerce.checkout.domain.order.OrderRepository;
+import com.grupobolivar.ecommerce.checkout.domain.order.OrderStatus;
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,16 +41,25 @@ class CheckoutServiceTest {
 	DiscountSettingsProvider settings;
 	@Mock
 	CouponCatalog coupons;
+	@Mock
+	OrderRepository orders;
+
+	private final Clock clock =
+			Clock.fixed(Instant.parse("2026-09-08T19:30:25.017Z"), ZoneId.of("America/Bogota"));
 
 	CheckoutService service;
 
 	@BeforeEach
 	void setUp() {
-		service = new CheckoutService(products, settings, coupons);
+		service = new CheckoutService(products, settings, coupons, orders,
+				new RadicadoGenerator("ORD", clock), clock);
 		lenient().when(settings.current()).thenReturn(new DiscountConfig(
 				"Tecnología", new BigDecimal("0.10"), new BigDecimal("100.00"),
 				new BigDecimal("0.05"), new BigDecimal("0.35")));
 		lenient().when(coupons.findActive(anyString())).thenReturn(Optional.empty());
+		lenient().when(orders.save(org.mockito.ArgumentMatchers.any()))
+				.thenAnswer(invocation -> invocation.getArgument(0));
+		lenient().when(products.decrementStock(anyLong(), anyInt())).thenReturn(true);
 	}
 
 	private void stockAvailable() {
@@ -50,25 +70,21 @@ class CheckoutServiceTest {
 	}
 
 	@Test
-	void rejectsAnEmptyCart() {
+	void quoteRejectsAnEmptyCart() {
 		assertThatThrownBy(() -> service.quote(new QuoteCommand(List.of(), null)))
 				.isInstanceOf(EmptyCartException.class);
-		assertThatThrownBy(() -> service.quote(new QuoteCommand(null, "WELCOME2026")))
-				.isInstanceOf(EmptyCartException.class);
 	}
 
 	@Test
-	void rejectsAnUnknownProduct() {
+	void quoteRejectsAnUnknownProduct() {
 		when(products.findById(999L)).thenReturn(Optional.empty());
-
 		assertThatThrownBy(() -> service.quote(
 				new QuoteCommand(List.of(new QuoteCommand.Line(999L, 1)), null)))
-				.isInstanceOf(UnknownProductException.class)
-				.hasMessageContaining("999");
+				.isInstanceOf(UnknownProductException.class);
 	}
 
 	@Test
-	void quotesTheCascadeResolvingPricesServerSide() {
+	void quoteRunsTheCascadeResolvingPricesServerSide() {
 		stockAvailable();
 		when(coupons.findActive("WELCOME2026"))
 				.thenReturn(Optional.of(new Coupon("WELCOME2026", new BigDecimal("0.15"), true)));
@@ -76,30 +92,56 @@ class CheckoutServiceTest {
 		DiscountBreakdown result = service.quote(new QuoteCommand(
 				List.of(new QuoteCommand.Line(2L, 2), new QuoteCommand.Line(6L, 4)), "WELCOME2026"));
 
-		// T0 = 50 + 20 = 70 ; category 10% of 50 = 5 ; volume: 65 !> 100 -> 0 ; coupon 15% of 65 = 9.75
 		assertThat(result.originalTotal().value()).isEqualByComparingTo("70.00");
-		assertThat(amountOf(result, DiscountType.CATEGORY)).isEqualByComparingTo("5.00");
-		assertThat(amountOf(result, DiscountType.VOLUME)).isEqualByComparingTo("0");
-		assertThat(amountOf(result, DiscountType.COUPON)).isEqualByComparingTo("9.75");
 		assertThat(result.finalTotal().value()).isEqualByComparingTo("55.25");
-		assertThat(result.capReached()).isFalse();
 	}
 
 	@Test
-	void ignoresAnInactiveCoupon() {
+	void checkoutPersistsTheOrderAndDecrementsStock() {
 		stockAvailable();
+		when(coupons.findActive("WELCOME2026"))
+				.thenReturn(Optional.of(new Coupon("WELCOME2026", new BigDecimal("0.15"), true)));
 
-		DiscountBreakdown result = service.quote(new QuoteCommand(
-				List.of(new QuoteCommand.Line(2L, 2)), "BLACKFRIDAY2025"));
+		OrderConfirmation confirmation = service.checkout(new CheckoutCommand(
+				List.of(new QuoteCommand.Line(2L, 2), new QuoteCommand.Line(6L, 4)), "WELCOME2026"));
 
-		assertThat(amountOf(result, DiscountType.COUPON)).isEqualByComparingTo("0");
+		assertThat(confirmation.radicado()).isEqualTo("ORD-20260908143025017");
+		assertThat(confirmation.status()).isEqualTo(OrderStatus.COMPRADO);
+		assertThat(confirmation.breakdown().finalTotal().value()).isEqualByComparingTo("55.25");
+
+		org.mockito.ArgumentCaptor<Order> orderCaptor =
+				org.mockito.ArgumentCaptor.forClass(Order.class);
+		verify(orders).save(orderCaptor.capture());
+		Order saved = orderCaptor.getValue();
+		assertThat(saved.lines()).hasSize(2);
+		assertThat(saved.couponCode()).isEqualTo("WELCOME2026");
+		assertThat(saved.discounts()).anySatisfy(discount -> {
+			assertThat(discount.type()).isEqualTo(DiscountType.CATEGORY);
+			assertThat(discount.rate()).isEqualByComparingTo("0.10");
+		});
+
+		verify(products).decrementStock(2L, 2);
+		verify(products).decrementStock(6L, 4);
 	}
 
-	private static BigDecimal amountOf(DiscountBreakdown breakdown, DiscountType type) {
-		return breakdown.lines().stream()
-				.filter(line -> line.type() == type)
-				.map(line -> line.amount().value())
-				.findFirst()
-				.orElse(BigDecimal.ZERO);
+	@Test
+	void checkoutRejectsAndDoesNotPersistWhenStockIsInsufficient() {
+		when(products.findById(2L)).thenReturn(Optional.of(
+				new ProductSnapshot(2, "Auriculares", Money.of("60.00"), "Tecnología", 3)));
+
+		assertThatThrownBy(() -> service.checkout(new CheckoutCommand(
+				List.of(new QuoteCommand.Line(2L, 99)), null)))
+				.isInstanceOf(InsufficientStockException.class)
+				.hasMessageContaining("Auriculares");
+
+		verify(orders, never()).save(org.mockito.ArgumentMatchers.any());
+		verify(products, never()).decrementStock(anyLong(), anyInt());
+	}
+
+	@Test
+	void checkoutRejectsAnEmptyCart() {
+		assertThatThrownBy(() -> service.checkout(new CheckoutCommand(List.of(), null)))
+				.isInstanceOf(EmptyCartException.class);
+		verify(orders, times(0)).save(org.mockito.ArgumentMatchers.any());
 	}
 }

@@ -1,6 +1,8 @@
 package com.grupobolivar.ecommerce.shared.api;
 
 import com.grupobolivar.ecommerce.checkout.application.EmptyCartException;
+import com.grupobolivar.ecommerce.checkout.application.InsufficientStockException;
+import com.grupobolivar.ecommerce.checkout.application.OrderNotFoundException;
 import com.grupobolivar.ecommerce.checkout.application.UnknownProductException;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -19,10 +21,16 @@ public class GlobalExceptionHandler {
 		return ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), exception.getMessage());
 	}
 
-	@ExceptionHandler(UnknownProductException.class)
+	@ExceptionHandler({ UnknownProductException.class, OrderNotFoundException.class })
 	@ResponseStatus(HttpStatus.NOT_FOUND)
-	public ErrorResponse handleUnknownProduct(UnknownProductException exception) {
+	public ErrorResponse handleNotFound(RuntimeException exception) {
 		return ErrorResponse.of(HttpStatus.NOT_FOUND.value(), exception.getMessage());
+	}
+
+	@ExceptionHandler(InsufficientStockException.class)
+	@ResponseStatus(HttpStatus.CONFLICT)
+	public ErrorResponse handleInsufficientStock(InsufficientStockException exception) {
+		return ErrorResponse.of(HttpStatus.CONFLICT.value(), exception.getMessage());
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

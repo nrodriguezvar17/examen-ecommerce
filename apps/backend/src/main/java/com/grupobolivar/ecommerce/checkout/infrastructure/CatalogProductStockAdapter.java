@@ -29,4 +29,9 @@ public class CatalogProductStockAdapter implements ProductStockPort {
 				product.category(),
 				product.stock()));
 	}
+
+	@Override
+	public boolean decrementStock(long productId, int quantity) {
+		return products.decrementStock(productId, quantity);
+	}
 }

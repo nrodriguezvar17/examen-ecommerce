@@ -134,3 +134,25 @@
 .how .steps {
   text-align: left;
 }
+
+@media (max-width: 560px) {
+  :host {
+    padding: 1.5rem 1rem 2.5rem;
+  }
+
+  .hero {
+    padding: 2rem 1.1rem 2.25rem;
+  }
+
+  .wordmark img {
+    max-width: 100%;
+  }
+
+  .lead {
+    font-size: 1rem;
+  }
+
+  .cta .dv-btn {
+    flex: 1 1 100%;
+  }
+}

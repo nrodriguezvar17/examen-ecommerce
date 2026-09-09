@@ -3,14 +3,19 @@
   align-items: flex-end;
   gap: 0.5rem;
   margin-top: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  flex: 1;
+  flex: 1 1 160px;
   font-size: 0.8rem;
+}
+
+.coupon .dv-btn {
+  flex-shrink: 0;
 }
 
 .applied {

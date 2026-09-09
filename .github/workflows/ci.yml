@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend — test + cobertura (JaCoCo 80%)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+          cache-dependency-path: apps/backend/*.gradle*
+
+      # ubuntu-latest ya trae Docker en marcha → Testcontainers levanta PostgreSQL.
+      - name: ./gradlew check
+        run: ./gradlew check --no-daemon --console=plain
+
+      - name: Publicar reporte de tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-reports
+          path: |
+            apps/backend/build/reports/tests/test
+            apps/backend/build/reports/jacoco/test/html
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend — lint + test (Vitest 80%) + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test + cobertura
+        run: npm test
+
+      - name: Build de producción
+        run: npm run build
+
+      - name: Publicar cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: apps/frontend/coverage
+          if-no-files-found: ignore

@@ -119,3 +119,29 @@
   font-size: 0.85rem;
   margin-top: 0.6rem;
 }
+
+@media (max-width: 480px) {
+  .lines li {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'info remove'
+      'qty total';
+    row-gap: 0.45rem;
+  }
+
+  .info {
+    grid-area: info;
+  }
+  .qty {
+    grid-area: qty;
+  }
+  .line-total {
+    grid-area: total;
+    justify-self: end;
+    align-self: center;
+  }
+  .remove {
+    grid-area: remove;
+    align-self: start;
+  }
+}

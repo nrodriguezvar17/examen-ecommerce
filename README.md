@@ -130,10 +130,14 @@ docker compose exec postgres psql -U ecommerce -d ecommerce   # cliente psql den
 Migraciones por separado: `./gradlew flywayInfo` · `flywayMigrate` · `flywayClean`.
 Detener la BD: `docker compose down` (`-v` para borrar también los datos).
 
-### Usar un PostgreSQL propio (sin el contenedor)
+### Apuntar a un PostgreSQL existente (en vez del contenedor)
+
+Por defecto el proyecto **crea y arranca un contenedor** PostgreSQL descartable. Para usar
+en su lugar una instancia que ya tengas (PostgreSQL instalado en tu máquina, un servidor
+compartido, uno en la nube…):
 
 ```bash
-export SPRING_DOCKER_COMPOSE_ENABLED=false
+export SPRING_DOCKER_COMPOSE_ENABLED=false                       # no levantes el contenedor
 export SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:5432/<base>
 export SPRING_DATASOURCE_USERNAME=<user>
 export SPRING_DATASOURCE_PASSWORD=<pass>

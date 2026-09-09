@@ -584,10 +584,13 @@ docker compose exec postgres psql -U ecommerce -d ecommerce   # o un cliente ext
 Para empezar de cero otra vez: `docker compose down -v` (borra el volumen) → el siguiente
 `bootRun` recrea todo desde las migraciones.
 
-### Usar un PostgreSQL propio (sin el contenedor)
+### Apuntar a un PostgreSQL existente (en vez del contenedor)
+
+Por defecto se crea y arranca un contenedor PostgreSQL descartable. Para usar en su lugar
+una instancia ya existente (local, compartida o en la nube):
 
 ```bash
-export SPRING_DOCKER_COMPOSE_ENABLED=false
+export SPRING_DOCKER_COMPOSE_ENABLED=false                       # no levantes el contenedor
 export SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:5432/<base>
 export SPRING_DATASOURCE_USERNAME=<user>
 export SPRING_DATASOURCE_PASSWORD=<pass>

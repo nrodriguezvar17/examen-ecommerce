@@ -2,11 +2,18 @@
 
 > Esquema relacional (PostgreSQL 16) derivado de los requisitos del enunciado, más una
 > gestión ligera de **clientes** (sin autenticación) y del **ciclo de vida de la orden**.
-> **Implementado** en `apps/backend/src/main/resources/db/migration/` (V1–V4) — ver §8.
+> **Implementado** en `apps/backend/src/main/resources/db/migration/` (V1–V7) — ver §8.
 
-**Alcance:** MVP del enunciado (catálogo → carrito → motor de descuentos → orden) +
-pseudo-login por nombre de usuario en el frontend + estados del pedido. **No** hay
-contraseñas, sesiones ni carrito persistido.
+**Alcance:** MVP del enunciado (catálogo → carrito → motor de descuentos → orden) + detalle
+de producto con reseñas + lista de compras. **No** hay contraseñas, sesiones ni carrito
+persistido.
+
+**Qué está expuesto por API hoy** (el resto del modelo queda listo pero sin *endpoint*):
+`products` / `product_details` / `product_reviews` (catálogo y detalle), `coupons`,
+`orders` / `order_lines` / `order_discounts` (checkout y "mis compras"),
+`order_status_history` (se escribe la fila inicial `COMPRADO`). **Sin *endpoint* todavía:**
+`customers` (el checkout actual es **como invitado**, `orders.customer_id = null`) y el
+avance de estado del pedido (`order_statuses` / `PATCH .../status`).
 
 ---
 
@@ -14,16 +21,17 @@ contraseñas, sesiones ni carrito persistido.
 
 | Requisito / decisión | Necesidad de datos |
 |---|---|
-| HU1: productos con `id, nombre, precio, categoría, stock` | `products` + `categories` |
+| HU1: productos con `id, nombre, precio, categoría, stock` (+ imagen para el listado) | `products` (incl. `image_url`) + `categories` |
 | Regla 1: 10 % a la categoría "Tecnología" | `categories.discount_rate` (la tasa es dato) |
 | Regla 3: cupón `WELCOME2026` = 15 % · edge "no registrado / expirado" | `coupons` con `active` + vigencia |
+| Detalle de producto (marca, descripción larga, reseñas) | `product_details` (1:1) + `product_reviews` (1:N) |
 | HU3: persistir la orden con **totales desglosados exactos** | `orders` + `order_lines` + `order_discounts` |
 | Regla 4: tope del 35 % | se persiste `orders.cap_reached` / `effective_rate` |
 | Edge: compra sin stock | `products.stock` con `check (>= 0)` + validación en el servicio |
-| Producto con detalle y reseñas | `product_details` (1:1) + `product_reviews` (1:N) |
 | Orden con radicado `LETRAS-NÚMERO` | `orders.radicado` |
-| Pseudo-login: "poné tu usuario y ve tus compras" | `customers` (sin auth) + `orders.customer_id` |
-| "Órdenes activas del cliente" con estados | `order_statuses` (catálogo) + `order_status_history` |
+| Lista "Mis compras" con su desglose | `orders` ⨝ `order_lines` ⨝ `order_discounts` |
+| Ciclo de vida del pedido (modelado, sin *endpoint* aún) | `order_statuses` (catálogo) + `order_status_history` |
+| Cliente identificado (modelado, sin *endpoint* aún; checkout como invitado) | `customers` (sin auth) + `orders.customer_id` (nullable) |
 
 > «Compras y ventas»: desde la óptica del cliente cada orden es una compra; desde la óptica
 > de la tienda, una venta. Es **la misma** entidad `orders` — no se modela algo aparte.
@@ -65,6 +73,7 @@ erDiagram
         numeric     unit_price  "numeric(12,2) >= 0"
         bigint      category_id FK
         integer     stock       ">= 0"
+        varchar     image_url   "nullable (V6: movida desde product_details)"
         boolean     active
         timestamptz created_at
     }
@@ -73,7 +82,6 @@ erDiagram
         varchar     display_name
         text        description
         varchar     brand
-        varchar     image_url
         timestamptz updated_at
     }
     product_reviews {
@@ -154,10 +162,11 @@ erDiagram
 | `email` | `varchar(160)` | nullable, `unique` parcial (`where email is not null`) | opcional |
 | `created_at` | `timestamptz` | `not null default now()` | |
 
-> Sin `password`, sin `role`, sin sesión. El "login" es identificación, no autenticación.
-> Los clientes son **datos maestros**: salen del seed. El pseudo-login es un **lookup**
-> (`GET /api/customers/{username}`); si no existe, `404`. El backend **no** crea clientes
-> al vuelo desde el front.
+> Sin `password`, sin `role`, sin sesión. El "login" sería identificación, no autenticación.
+> Los clientes son **datos maestros**: salen del seed (`ana`, `carlos`). El pseudo-login
+> previsto es un **lookup** (`GET /api/customers/{username}` → `404` si no existe), **aún
+> sin implementar**: hoy el checkout va como invitado y `orders.customer_id` es `null`. El
+> backend **no** crearía clientes al vuelo desde el front.
 
 ### 3.2. `categories`
 
@@ -177,6 +186,7 @@ erDiagram
 | `unit_price` | `numeric(12,2)` | `not null`, `check (>= 0)` | dinero → `numeric`, nunca `float` |
 | `category_id` | `bigint` | `not null`, `references categories(id)` | |
 | `stock` | `integer` | `not null`, `check (>= 0)` | se decrementa en la compra |
+| `image_url` | `varchar(500)` | nullable | imagen para el listado y el detalle. **V6** la movió aquí desde `product_details` (así el listado no carga el detalle); **V7** las resembró a URLs de `loremflickr.com` por tipo de producto |
 | `active` | `boolean` | `not null default true` | retiro lógico |
 | `created_at` | `timestamptz` | `not null default now()` | |
 
@@ -188,10 +198,12 @@ erDiagram
 |---|---|---|---|
 | `product_id` | `bigint` | **PK**, `references products(id) on delete cascade` | la PK *es* la FK ⇒ 1:1 estricto |
 | `display_name` | `varchar(160)` | `not null` | nombre para la tienda |
-| `description` | `text` | | |
-| `brand` | `varchar(80)` | | |
-| `image_url` | `varchar(500)` | | |
+| `description` | `text` | | descripción larga |
+| `brand` | `varchar(80)` | | marca |
 | `updated_at` | `timestamptz` | `not null default now()` | |
+
+> `image_url` vivía aquí en el diseño original; **V6** la trasladó a `products` para que el
+> listado del catálogo la muestre sin cargar el detalle 1:1.
 
 ### 3.5. `product_reviews` — reseñas 1:N
 
@@ -253,7 +265,7 @@ Dato derivado → no se almacena. Si el rendimiento lo exigiera, vista materiali
 |---|---|---|---|
 | `id` | `bigint` | PK identity | surrogate interno (FKs apuntan aquí) |
 | `radicado` | `varchar(24)` | `not null`, `unique`, `check (radicado ~ '^[A-Z]{2,5}-[0-9]{14,17}$')` | clave de negocio — ver §4.2 |
-| `customer_id` | `bigint` | nullable, `references customers(id)` | el flujo del front siempre lo envía tras el pseudo-login |
+| `customer_id` | `bigint` | nullable, `references customers(id)` | **hoy siempre `null`**: el checkout es como invitado. La FK queda lista para asociar la orden a un `customer` cuando se exponga el pseudo-login |
 | `status_code` | `varchar(16)` | `not null default 'COMPRADO'`, `references order_statuses(code)` | estado **actual** (denormalizado para consultas rápidas) |
 | `created_at` | `timestamptz` | `not null default now()` | |
 | `coupon_code` | `varchar(40)` | nullable, `references coupons(code)` | cupón **efectivamente aplicado** |
@@ -311,7 +323,9 @@ primera fila (`COMPRADO`).
 
 ### 4.1. Producto: cabeza + detalle + reseñas
 `products` = lo transaccional (precio, stock, categoría) — lo único que toca el motor de
-descuentos. `product_details` (PK = FK) = lo presentacional, **partición vertical
+descuentos — **más `image_url`**, que se muestra en el listado del catálogo y por eso vive
+en la cabeza (V6). `product_details` (PK = FK) = lo presentacional que solo se necesita en
+la pantalla de detalle (`display_name`, `description`, `brand`): **partición vertical
 deliberada** (no la exige ninguna forma normal; separa responsabilidades y ciclos de
 cambio). `product_reviews` = 1:N; el promedio de estrellas no se guarda (vista).
 
@@ -326,7 +340,12 @@ Formato **`PREFIJO-NÚMERO`**:
 - `unique` + `check` de formato. Colisión solo en la misma milésima → el `unique` la
   rechaza y el servicio reintenta.
 
-### 4.3. Cliente y pseudo-login
+### 4.3. Cliente y pseudo-login (previsto, no implementado)
+
+> El modelo (`customers` + `orders.customer_id` nullable) está y sembrado; los *endpoints*
+> `GET /api/customers/*` no existen en el MVP actual y el checkout persiste
+> `customer_id = null`. Lo que sigue es el diseño para cuando se exponga.
+
 `customers` sin credenciales, poblada por el seed. Flujo:
 1. El front pide "usuario" → `GET /api/customers/{username}`.
 2. Si existe, devuelve `{ id, username, fullName, email }`; si no, `404` y el front muestra
@@ -340,9 +359,10 @@ la autenticación real queda fuera del alcance. Alta de clientes nuevos: fuera d
 
 ### 4.4. Estado de la orden
 Estado **actual** denormalizado en `orders.status_code` (consultas rápidas de "activas") +
-**historial** completo en `order_status_history`. La orden nace `COMPRADO`. Transiciones
-solo hacia adelante (`sort_order` creciente), nunca desde un estado `is_final`.
-"Órdenes activas del cliente" = `join order_statuses where is_final = false`.
+**historial** completo en `order_status_history`. La orden nace `COMPRADO` y al persistirla
+se inserta esa primera fila del historial. El avance de estado (transiciones solo hacia
+adelante por `sort_order`, nunca desde un `is_final`) está diseñado pero **aún no hay
+`endpoint`** que lo dispare.
 
 ---
 
@@ -364,20 +384,24 @@ solo hacia adelante (`sort_order` creciente), nunca desde un estado `is_final`.
 
 ## 6. Cómo se resuelve cada regla / historia
 
-| Regla / historia | Resolución |
-|---|---|
-| HU1 — listar productos | `products` ⨝ `categories` ⨝ `product_details` ⨝ `product_rating_summary` |
-| Regla 1 — Categoría 10 % | `CategoryDiscountRule` lee `categories.discount_rate` |
-| Regla 2 — Volumen 5 % > $100 | parámetro `application.yml` |
-| Regla 3 — Cupón 15 % | `CouponCatalog` consulta `coupons` (§3.7) |
-| Regla 4 — Tope 35 % | parámetro + invariante `AbsoluteCapPolicy`; persistido en `orders` |
-| HU3 — persistir orden | 1 transacción: `insert orders` (radicado, customer, status COMPRADO) → `order_lines` → `order_discounts` → `order_status_history` → `update products.stock` |
-| HU4 — alerta 35 % | `orders.cap_reached` / respuesta del `quote` |
-| Edge — stock insuficiente | validación en `CheckoutService` → `409` |
-| Edge — cupón inválido/expirado | `findActive` vacío → sin fila `COUPON`, `coupon_code = null` |
-| Pseudo-login | `GET /api/customers/{username}` → lookup en `customers` (404 si no existe) |
-| "Mis compras" + estados | `GET /api/customers/{username}/orders` ⨝ `order_statuses` |
-| Avanzar estado (demo) | `PATCH /api/orders/{radicado}/status` → valida transición, escribe `orders` + `order_status_history` |
+| Regla / historia | Resolución | Endpoint |
+|---|---|---|
+| HU1 — listar productos | `products` (incl. `image_url`) ⨝ `categories` ⨝ `product_details` ⨝ `product_rating_summary` | `GET /api/products` |
+| Detalle de producto | `products` ⨝ `product_details` (`join fetch`) + `product_reviews` (más recientes primero) | `GET /api/products/{id}` |
+| Regla 1 — Categoría 10 % | `CategoryDiscountRule` lee `categories.discount_rate` | — |
+| Regla 2 — Volumen 5 % > $100 | parámetro `application.yml` | — |
+| Regla 3 — Cupón 15 % | `CouponCatalog` consulta `coupons` (§3.7) | — |
+| Regla 4 — Tope 35 % | parámetro + invariante `AbsoluteCapPolicy`; persistido en `orders` | — |
+| HU2 — desglose del cupón | motor de descuentos, sin efectos | `POST /api/checkout/quote` |
+| HU3 — persistir orden | 1 transacción: valida stock → `UPDATE products.stock WHERE stock >= qty` (atómico) → `insert orders` (radicado, `customer_id = null`, status `COMPRADO`) → `order_lines` → `order_discounts` → `order_status_history` (fila `COMPRADO`) | `POST /api/checkout` |
+| HU4 — alerta 35 % | `orders.cap_reached` / respuesta del `quote` | — |
+| Edge — stock insuficiente | validación en `CheckoutService` + guarda del `UPDATE` → `409` | — |
+| Edge — cupón inválido/expirado | `findActive` vacío → sin fila `COUPON`, `coupon_code = null` | — |
+| "Mis compras" | `orders` ⨝ `order_lines` ⨝ `order_discounts`, 20 más recientes | `GET /api/orders` · `GET /api/orders/{radicado}` |
+
+**Modelado pero sin *endpoint* en el MVP actual:** pseudo-login (`customers`, lookup por
+`username`) y avance de estado del pedido (`order_statuses`, `PATCH .../status` sobre
+`order_status_history`). Las tablas y las FKs están; falta exponerlas.
 
 ---
 
@@ -391,10 +415,11 @@ solo hacia adelante (`sort_order` creciente), nunca desde un estado `is_final`.
 | 4 | `line_total` / `effective_rate` / `final_total` | columnas normales que escribe la app |
 | 5 | `sku` en productos | incluido |
 | 6 | Reseñas | se siembran ejemplos; `product_rating_summary` como vista simple |
-| 7 | Categorías del seed | `Tecnología (0.10)`, `Papelería`, `Libros`, `Hogar`, `Deportes` |
-| 8 | Cupones del seed | `WELCOME2026` (activo) + `BLACKFRIDAY2025` (`active=false`, expirado) + `MEGADESCUENTO` (activo, 50 %, prueba HU4) |
-| 9 | Clientes del seed | `ana` (Ana Torres), `carlos` (Carlos Ruiz) |
-| 10 | Órdenes de demo | **no** se siembran; se crean en vivo por el checkout. `PATCH .../status` para avanzar estados en la demo |
+| 7 | Imágenes de producto | `products.image_url`; V7 las apunta a `loremflickr.com/600/400/<tag>` por SKU (foto acorde al tipo, sin API key) |
+| 8 | Categorías del seed | `Tecnología (0.10)`, `Papelería`, `Libros`, `Hogar`, `Deportes` |
+| 9 | Cupones del seed | `WELCOME2026` (activo) + `BLACKFRIDAY2025` (`active=false`, expirado) + `MEGADESCUENTO` (activo, 50 %, prueba HU4) |
+| 10 | Clientes del seed | `ana` (Ana Torres), `carlos` (Carlos Ruiz) — sembrados; sin *endpoint* que los consuma aún |
+| 11 | Órdenes | **no** se siembran; se crean en vivo por el checkout (como invitado) |
 
 ---
 
@@ -404,11 +429,13 @@ solo hacia adelante (`sort_order` creciente), nunca desde un estado `is_final`.
 
 | Script | Contenido |
 |---|---|
-| `V1__schema.sql` | las 11 tablas + índices + `check`s + FKs |
+| `V1__schema.sql` | las 11 tablas + índices + `check`s + FKs (`product_details.image_url` incluida) |
 | `V2__views.sql` | vista `product_rating_summary` |
 | `V3__seed_reference.sql` | `order_statuses` (4), `categories` (5, `Tecnología = 0.10`), `coupons` (`WELCOME2026` activo + `BLACKFRIDAY2025` expirado) |
-| `V4__seed_catalog.sql` | 10 productos + `product_details` (1:1) + 10 reseñas + 2 clientes (`ana`, `carlos`) |
+| `V4__seed_catalog.sql` | 10 productos + `product_details` (1:1, con `image_url`) + 10 reseñas + 2 clientes (`ana`, `carlos`) |
 | `V5__seed_demo_coupon.sql` | cupón de prueba `MEGADESCUENTO` (50 %, activo) para demostrar el tope del 35 % (HU4) |
+| `V6__move_image_to_products.sql` | `products.image_url` nueva → `UPDATE` que copia desde `product_details` → `drop column product_details.image_url` |
+| `V7__reseed_product_images.sql` | `UPDATE products.image_url` por SKU a URLs de `loremflickr.com` (foto acorde al tipo de producto) |
 
 Se aplican solas al arrancar la app (`spring-boot-starter-flyway`) o de forma
 independiente con el plugin de Gradle:
@@ -416,7 +443,7 @@ independiente con el plugin de Gradle:
 ```bash
 cd apps/backend
 docker compose up -d                 # PostgreSQL 16 (compose.yaml)
-./gradlew flywayMigrate              # aplica V1..V4
+./gradlew flywayMigrate              # aplica V1..V7
 ./gradlew flywayInfo                 # estado
 ./gradlew flywayClean                # vacía el esquema (dev)
 docker compose exec postgres psql -U ecommerce -d ecommerce -c "\dt"
